@@ -9,19 +9,21 @@ export class NostrService {
 
     /**
      * Se suscribe a los eventos de anclaje espacial.
-     * Corregido: Uso de Array para soportar múltiples filtros.
+     * Esta versión garantiza que el filtro sea un Objeto dentro de un Array.
      */
     subscribeToAnchors(onEvent) {
-        // 1. Iniciamos 'filtros' como un ARRAY (con corchetes [])
-        const filtros = [
-            {
-                kinds: [1],
-                "#t": ["spatial_anchor"],
-                limit: 100
-            }
-        ];
+        // 1. Definimos el filtro global inicial
+        const filtroGlobal = {
+            kinds: [1],
+            "#t": ["spatial_anchor"],
+            limit: 100
+        };
 
-        // 2. Ahora .push() funcionará porque 'filtros' es un Array
+        // 2. IMPORTANTE: Definimos 'filtros' como un ARRAY desde el inicio
+        // Esto evita el error "r.push is not a function"
+        const filtros = [filtroGlobal];
+
+        // 3. Agregamos el filtro del usuario logueado si existe la pubkey
         if (AuthManager.userPubkey) {
             filtros.push({
                 kinds: [1],
@@ -30,7 +32,9 @@ export class NostrService {
             });
         }
 
-        // 3. Enviamos el array de filtros a la pool
+        console.log("📡 Suscribiendo a relays con filtros:", filtros);
+
+        // 4. Retornamos la suscripción usando el array de filtros
         return this.pool.subscribeMany(
             this.relays, 
             filtros, 
@@ -41,20 +45,17 @@ export class NostrService {
                     }
                 },
                 oneose() {
-                    console.log("📡 Conexión exitosa: Historial sincronizado.");
+                    console.log("✅ Conexión exitosa: Historial sincronizado.");
                 },
                 onclose(relay) {
-                    console.warn("🔌 Relay cerrado:", relay);
-                },
-                onerror(err) {
-                    console.error("⚠️ Error de relay:", err);
+                    console.warn("🔌 Conexión cerrada con relay:", relay);
                 }
             }
         );
     }
 
     /**
-     * Firma y publica un nuevo anclaje en la red Nostr.
+     * Firma y publica un nuevo anclaje usando la extensión Alby/Nostr.
      */
     async publishAnchor(eventData) {
         const event = {
@@ -66,35 +67,35 @@ export class NostrService {
         };
 
         try {
-            // Requiere extensión compatible (Alby)
+            // Llama a la extensión del navegador para firmar
             const signedEvent = await window.nostr.signEvent(event);
             
-            // Publica en los relays configurados
+            // Publica el evento firmado en todos los relays
             await Promise.any(this.pool.publish(this.relays, signedEvent));
             
-            console.log("✅ Evento publicado con éxito:", signedEvent);
+            console.log("🚀 Evento anclado y publicado:", signedEvent);
             return signedEvent;
         } catch (err) {
-            console.error("❌ Error al firmar o publicar:", err);
+            console.error("❌ Error en el proceso de anclaje:", err);
             throw err;
         }
     }
 
     /**
-     * Obtiene los metadatos de perfil (Kind 0) de un usuario.
+     * Recupera los metadatos de perfil del usuario (Kind 0).
      */
     async getUserProfile(pubkey) {
         const filter = { kinds: [0], authors: [pubkey], limit: 1 };
         
         try {
-            // Timeout de 3 segundos para evitar bloqueos por relays lentos
+            // Intentamos obtener el perfil con un límite de tiempo de 3 segundos
             const event = await this.pool.get(this.relays, filter, { timeout: 3000 });
             
             if (event && event.content) {
                 return JSON.parse(event.content);
             }
         } catch (e) {
-            console.warn("⚠️ No se pudo obtener el perfil de:", pubkey);
+            console.warn("⚠️ No se pudo cargar el perfil para:", pubkey);
         }
         return null;
     }
