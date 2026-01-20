@@ -7,23 +7,18 @@ export class NostrService {
         this.pool = new SimplePool();
     }
 
-    /**
-     * Se suscribe a los eventos de anclaje espacial.
-     * Esta versión garantiza que el filtro sea un Objeto dentro de un Array.
-     */
+    
     subscribeToAnchors(onEvent) {
         // 1. Definimos el filtro global inicial
         const filtroGlobal = {
             kinds: [1],
             "#t": ["spatial_anchor"],
-            limit: 100
+            limit: 200
         };
 
-        // 2. IMPORTANTE: Definimos 'filtros' como un ARRAY desde el inicio
-        // Esto evita el error "r.push is not a function"
+        
         const filtros = [filtroGlobal];
 
-        // 3. Agregamos el filtro del usuario logueado si existe la pubkey
         if (AuthManager.userPubkey) {
             filtros.push({
                 kinds: [1],
@@ -34,29 +29,31 @@ export class NostrService {
 
         console.log("📡 Suscribiendo a relays con filtros:", filtros);
 
-        // 4. Retornamos la suscripción usando el array de filtros
-        return this.pool.subscribeMany(
-            this.relays, 
-            filtros, 
-            {
-                onevent(event) {
-                    if (event && event.id) {
-                        onEvent(event);
-                    }
-                },
-                oneose() {
-                    console.log("✅ Conexión exitosa: Historial sincronizado.");
-                },
-                onclose(relay) {
-                    console.warn("🔌 Conexión cerrada con relay:", relay);
-                }
-            }
-        );
-    }
+        console.log("🔍 Depuración: Suscribiendo a estos relays:", this.relays);
+        console.log("📋 Depuración: Filtros enviados:", JSON.stringify(filtros));
 
-    /**
-     * Firma y publica un nuevo anclaje usando la extensión Alby/Nostr.
-     */
+        return this.pool.subscribeMany(
+        this.relays, 
+        filtros, 
+        {
+            onevent(event) {
+                // Verificamos si el evento tiene etiquetas de geohash (NIP-01/Geo)
+                console.log("✨ Evento recibido de relay:", event.id);
+                onEvent(event);
+            },
+            oneose() {
+                // EOSE (End of Stored Events): Esto confirma que el relay 
+                // ya terminó de enviarnos los eventos PASADOS.
+                console.log("✅ Fin de eventos almacenados (EOSE). Buscando nuevos...");
+            },
+            onerror(err) {
+                console.error("❌ Error en relay durante suscripción:", err);
+            }
+        }
+    );
+}
+
+    
     async publishAnchor(eventData) {
         const event = {
             kind: 1,
