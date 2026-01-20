@@ -10,22 +10,26 @@ export class NostrService {
 
 
 subscribeToAnchors(onEvent) {
-    // Filtro limpio y estricto
-    const filtros = [
-        {
-            kinds: [1],
-            "#t": ["spatial_anchor"]
-        }
-    ];
+    // Definimos el objeto de filtro directamente
+    const filtroPrincipal = {
+        kinds: [1],
+        "#t": ["spatial_anchor"]
+    };
 
-    return this.pool.subscribeMany(this.relays, filtros, {
-        onevent(event) {
-            onEvent(event);
-        },
-        oneose() {
-            console.log("✅ Historial sincronizado correctamente.");
+    // Usamos el método de la pool pasándole el OBJETO directamente, 
+    // o asegurándonos de que no haya doble anidación.
+    return this.pool.subscribeMany(
+        this.relays, 
+        [filtroPrincipal], // UN SOLO nivel de corchetes
+        {
+            onevent(event) {
+                if (event && event.id) onEvent(event);
+            },
+            oneose() {
+                console.log("✅ Historial sincronizado.");
+            }
         }
-    });
+    );
 }
 
 
