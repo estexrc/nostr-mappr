@@ -6,7 +6,7 @@ import { AuthManager } from './auth.js';
 import { ListManager } from './ui-list.js';
 
 // --- CONFIGURACIÓN ---
-const RELAYS = ['wss://nos.lol', /*'wss://relay.nostr.band'*/ 'wss://relay.damus.io']; /*'wss://relay.snort.social'*/
+const RELAYS = ['wss://nos.lol', 'wss://relay.nostr.band', 'wss://relay.damus.io']; /*'wss://relay.snort.social'*/
 const ROSARIO_COORDS = [-32.9468, -60.6393];
 
 // --- INICIALIZACIÓN ---

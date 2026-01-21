@@ -10,7 +10,29 @@ export class NostrService {
 
 
 subscribeToAnchors(onEvent) {
-    // Definimos el objeto de filtro puro
+    const filter = {
+        kinds: [1],
+        "#t": ["spatial_anchor"]
+    };
+
+    // sub() es más directo que subscribeMany en algunas versiones
+    const sub = this.pool.sub(this.relays, [filter]);
+
+    sub.on('event', (event) => {
+        onEvent(event);
+    });
+
+    sub.on('eose', () => {
+        console.log("✅ EOSE recibido: El relay aceptó el filtro plano.");
+    });
+
+    return sub;
+}
+
+
+/*
+subscribeToAnchors(onEvent) {
+
     const filtroPrincipal = {
         kinds: [1],
         "#t": ["spatial_anchor"]
@@ -36,7 +58,7 @@ subscribeToAnchors(onEvent) {
         }
     );
 }
-
+*/
 
 
 
