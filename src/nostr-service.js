@@ -18,10 +18,11 @@ subscribeToAnchors(onEvent) {
 
     console.log("🔍 Enviando filtro único:", filtroPrincipal);
 
-    // Quitamos los corchetes de [filtroPrincipal] y pasamos el objeto directo
+    const filtrosParaEnviar = [filtroPrincipal];
+    
     return this.pool.subscribeMany(
         this.relays, 
-        [filtroPrincipal], 
+        filtrosParaEnviar, 
         {
             onevent(event) {
                 if (event && event.id) {
