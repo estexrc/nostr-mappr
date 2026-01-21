@@ -10,23 +10,30 @@ export class NostrService {
 
 
 subscribeToAnchors(onEvent) {
-    const filter = {
+    // Definimos el filtro como un objeto simple y plano
+    const filtro = {
         kinds: [1],
         "#t": ["spatial_anchor"]
     };
 
-    // sub() es más directo que subscribeMany en algunas versiones
-    const sub = this.pool.sub(this.relays, [filter]);
+    console.log("📡 Solicitando sincronización con filtro plano...");
 
-    sub.on('event', (event) => {
-        onEvent(event);
-    });
-
-    sub.on('eose', () => {
-        console.log("✅ EOSE recibido: El relay aceptó el filtro plano.");
-    });
-
-    return sub;
+    // Usamos subscribeMany pero nos aseguramos de no enviar un array de arrays
+    return this.pool.subscribeMany(
+        this.relays,
+        [filtro], // Al ser un solo objeto en el array, eliminamos el índice "0" interno
+        {
+            onevent(event) {
+                if (event?.id) {
+                    console.log("✨ ¡Punto recuperado!", event.id);
+                    onEvent(event);
+                }
+            },
+            oneose() {
+                console.log("✅ Filtro aceptado: Busqueda de historial completada.");
+            }
+        }
+    );
 }
 
 
