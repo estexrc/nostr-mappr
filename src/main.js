@@ -125,8 +125,12 @@ document.getElementById('btn-anchor').addEventListener('click', async () => {
         const name = AuthManager.getDisplayName(signedEvent.pubkey);
         const html = map.createPopupHTML(signedEvent, name);
         map.addMarker(signedEvent.id, pos.lat, pos.lon, html);
-
-        alert("¡Posición anclada con éxito!");
+        
+    document.getElementById('poi-name').value = '';
+    document.getElementById('poi-desc').value = '';
+        
+    
+            alert("¡Posición anclada con éxito!");
 
     } catch (err) {
         console.error("Error al anclar:", err);

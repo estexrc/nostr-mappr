@@ -45,7 +45,12 @@ export class MapManager {
 createPopupHTML(event, profile) {
     const name = profile?.display_name || profile?.name || event.pubkey.substring(0, 8);
     const picture = profile?.picture || 'https://www.gravatar.com/avatar/0000?d=mp&f=y';
-    const titulo = event.content.split('\n')[0] || "Punto de interés";
+    
+    // --- MEJORA: Separamos Título y Descripción ---
+    // Dividimos por el doble salto de línea que creamos en main.js
+    const partes = event.content.split('\n\n');
+    const titulo = partes[0] || "Punto de interés";
+    const descripcion = partes.slice(1).join('\n\n') || ""; 
 
     return `
         <div class="popup-container">
@@ -58,18 +63,13 @@ createPopupHTML(event, profile) {
             </div>
 
             <div class="popup-content">
-                ${event.content}
+                <strong style="display: block; font-size: 1.1em; margin-bottom: 5px;">${titulo}</strong>
+                <p style="margin: 0; color: #444; line-height: 1.4;">${descripcion}</p>
             </div>
 
             <div class="popup-actions">
-                <button onclick="window.followUser('${event.pubkey}', '${name}')" 
-                        class="btn-popup btn-follow">
-                    Follow
-                </button>
-                <button onclick="window.zapUser('${event.pubkey}', '${name}', '${titulo}')" 
-                        class="btn-popup btn-zap">
-                    ⚡ Zap
-                </button>
+                <button onclick="window.followUser('${event.pubkey}', '${name}')" class="btn-popup btn-follow">Follow</button>
+                <button onclick="window.zapUser('${event.pubkey}', '${name}', '${titulo}')" class="btn-popup btn-zap">⚡ Zap</button>
             </div>
         </div>
     `;
