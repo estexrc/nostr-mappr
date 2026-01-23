@@ -9,11 +9,24 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^7.2.4"
+    "vite": "^7.3.1"
   },
   "dependencies": {
     "leaflet": "^1.9.4",
     "ngeohash": "^0.6.3",
-    "nostr-tools": "^2.19.4"
-  }
+    "nostr-tools": "^2.20.0"
+  },
+  "description": "",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/estexrc/nostr-mappr.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/estexrc/nostr-mappr/issues"
+  },
+  "homepage": "https://github.com/estexrc/nostr-mappr#readme"
 }
