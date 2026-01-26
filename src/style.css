@@ -18,7 +18,7 @@ body, html {
     z-index: 1;
 }
 
-/* Panel Flotante */
+/* PANEL FLOTANTE */
 .glass-panel {
     position: absolute;
     top: 20px;
@@ -38,7 +38,7 @@ body, html {
     overflow-y: auto;
 }
 
-/* Cabecera de Usuario */
+/* CABECERA DE USUARIO */
 #user-header {
     display: flex;
     align-items: center; /* Alinea el grupo de avatar y el botón al centro vertical */
@@ -77,6 +77,98 @@ body, html {
 #user-pubkey-display {
     font-size: 11px;
     color: #666;
+}
+
+/* --- ESTILOS VISTA CONECTADO (Nuevos) --- */
+
+/* 1. ENCABEZADO CONECTADO */
+.connected-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.profile-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#profile-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid #5851db; /* Mismo borde que el invitado */
+    object-fit: cover;
+}
+
+.profile-text h3 { font-size: 16px; font-weight: 800; color: #1a1a1a; margin: 0; }
+.profile-text span { font-size: 12px; color: #666; display: block; }
+
+#btn-logout {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    color: #999;
+    cursor: pointer;
+    padding: 5px;
+}
+#btn-logout:hover { color: #d00; }
+
+/* 2. BARRA DE STATS */
+.stats-row {
+    display: flex;
+    justify-content: space-around;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-item { text-align: center; }
+.stat-val { display: block; font-weight: 800; font-size: 14px; color: #1a1a1a; }
+.stat-label { font-size: 10px; text-transform: uppercase; color: #666; letter-spacing: 0.5px; }
+
+/* 3. PESTAÑAS */
+.nav-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: #eee;
+    padding: 4px;
+    border-radius: 25px; /* Pastilla contenedora */
+}
+
+.tab-btn {
+    flex: 1;
+    border: none;
+    padding: 8px;
+    border-radius: 20px; /* Pastilla botón */
+    background: transparent;
+    color: #666;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* ESTADO ACTIVO: NEGRO (como tu botón de login) */
+.tab-btn.active {
+    background: #000000;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* 4. ESTADO VACIO DEL DIARIO */
+.empty-state {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+    font-size: 13px;
+    font-style: italic;
+    border: 1px dashed #ccc;
+    border-radius: 12px;
 }
 
 /* BOTÓN LOGIN NEGRO (Modificación 1) */
@@ -127,7 +219,7 @@ input:focus, textarea:focus {
     outline: none;
 }
 
-/* BOTÓN ANCHOR Y GENERALES (Modificación 2 - Tu código) */
+/* BOTÓN ANCHOR Y GENERALES */
 .btn-primary, #btn-anchor {
     width: 100%;
     /* Tu degradado exacto */
