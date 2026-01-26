@@ -33,10 +33,11 @@ export class MapManager {
 
     /* Añade un marcador al mapa si no existe ya.*/
      
-    addMarker(id, lat, lon, popupHTML) {
+    addMarker(id, lat, lon, popupHTML, categoria = 'todos') {
         if (this.markers.has(id)) return; // Evitar duplicados
 
         const marker = L.marker([lat, lon]).addTo(this.map).bindPopup(popupHTML);
+        marker.categoria = categoria;
         this.markers.set(id, marker);
     }
 

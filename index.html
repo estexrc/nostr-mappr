@@ -9,6 +9,7 @@
 </head>
 <body>
     <div id="map"></div>
+    <div id="filter-bar-container"></div>
 
     <div id="controls" class="glass-panel">
         
@@ -18,9 +19,11 @@
              <img id="user-avatar" src="https://www.gravatar.com/avatar/0?d=mp" alt="Invitado">
         <span id="user-name">Invitado</span>
         </div>
-        <button id="btn-login">🔑 Conectar Nostr</button>
+        <button id="btn-login">🔑 Conectar NOSTR</button>
     </div>
 </div>
+
+    <div id="view-connected" style="display: none;">
 
         <div class="connected-header">
     <div class="profile-group">
@@ -67,7 +70,12 @@
         <label>URL de Imagen (Opcional)</label>
         <input type="text" id="poi-img" placeholder="https://...">
     </div>
-
+    <div class="form-group">
+    <label>Categoría (Obligatorio)</label>
+    <select id="poi-category" required>
+        <option value="" disabled selected>Selecciona una etiqueta...</option>
+        </select>
+    </div>  
     <button id="btn-anchor" class="btn-primary-action">
         📍 Anclar mi posición
     </button>
@@ -79,6 +87,7 @@
     </div>
     <div id="drafts-list"></div>
 </div>
+    </div>
     </div>
     <script type="module" src="/src/main.js"></script> 
 </body>

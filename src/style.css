@@ -350,3 +350,78 @@ input:focus, textarea:focus {
     left: 150%;
     transition: all 0.7s ease-in-out;
 }
+
+/* --- BARRA DE FILTROS (Google Maps Style) --- */
+#filter-bar-container {
+    position: absolute;
+    top: 20px;
+    left: 60px;
+    right: 360px; /* Deja espacio para el panel lateral derecho */
+    height: 50px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow-x: auto; /* Scroll horizontal */
+    padding: 0 10px;
+    z-index: 900; /* Debajo del panel lateral (1000) pero sobre el mapa */
+    
+    /* Ocultar barra de scroll estéticamente */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+#filter-bar-container::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+/* El Chip (Etiqueta) individual */
+.filter-chip {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0,0,0,0.1);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+    white-space: nowrap; /* Evita que el texto se rompa */
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    flex-shrink: 0; /* Evita que se aplasten */
+}
+
+.filter-chip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Estado Activo (Cuando el filtro está seleccionado) */
+.filter-chip.active {
+    background: #1a1a1a; /* Tu negro "marca" */
+    color: white;
+    border-color: #1a1a1a;
+}
+
+/* Ajuste Responsive: En celular, la barra ocupa todo el ancho */
+@media (max-width: 768px) {
+    #filter-bar-container {
+        right: 20px; /* Ya no respetamos el panel lateral porque se ocultará o moverá */
+        top: 80px;   /* Bajamos un poco si hay barra de búsqueda arriba */
+    }
+}
+
+/* Estilo para el SELECT del formulario */
+select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    background: white;
+    font-size: 14px;
+    appearance: none; /* Quita el estilo default del sistema */
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right .7em top 50%;
+    background-size: .65em auto;
+}

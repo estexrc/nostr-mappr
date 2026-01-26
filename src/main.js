@@ -3,6 +3,8 @@ import { MapManager } from './ui-map.js';
 import { NostrService } from './nostr-service.js';
 import { GeoLogic } from './geo-utils.js';
 import { AuthManager } from './auth.js';
+import { initUI } from './ui-controller.js';
+import { CATEGORIAS } from './categories.js';
 
 // --- CONFIGURACIÓN ---
 const RELAYS = ['wss://nos.lol', 'wss://relay.primal.net', 'wss://relay.damus.io']; 
@@ -11,8 +13,32 @@ const ROSARIO_COORDS = [-32.9468, -60.6393];
 // --- INICIALIZACIÓN ---
 const map = new MapManager('map', ROSARIO_COORDS); 
 const nostr = new NostrService(RELAYS);
+const filterContainer = document.getElementById('filter-bar-container');
+const categorySelect = document.getElementById('poi-category');
 
-// 1. Cargar puntos existentes (Suscripción)
+// 2. Renderizar Chips y Opciones de Select
+if (filterContainer && categorySelect) {
+    CATEGORIAS.forEach(cat => {
+        // A) Crear botones de filtro (Barra superior estilo Google Maps)
+        const chip = document.createElement('div');
+        chip.className = 'filter-chip';
+        chip.textContent = cat.label;
+        
+        // Al hacer clic, marcamos el filtro como activo visualmente
+        chip.onclick = () => {
+            toggleFilter(cat.id, chip);
+        };
+        filterContainer.appendChild(chip);
+
+        // B) Crear opciones en el formulario (Selector obligatorio)
+        const option = document.createElement('option');
+        option.value = cat.id;
+        option.textContent = cat.label;
+        categorySelect.appendChild(option);
+    });
+}
+
+// Cargar puntos existentes
 
 function iniciarSuscripcion() {
     nostr.subscribeToAnchors(async (event) => {
@@ -20,23 +46,19 @@ function iniciarSuscripcion() {
         let profile = AuthManager.profileCache[event.pubkey];
         
         if (!profile) {
-            // Si no está en caché, lo pedimos al relay
             profile = await nostr.getUserProfile(event.pubkey);
             if (profile) AuthManager.saveProfile(event.pubkey, profile);
         }
 
-        // 2. Obtener el nombre para la lista lateral
         const name = AuthManager.getDisplayName(event.pubkey);
 
-        // 3. Intentar mostrar en el mapa con el nuevo Popup enriquecido
         const hash = GeoLogic.getHashFromEvent(event);
         if (hash) {
             const { lat, lon } = GeoLogic.decode(hash);
-            
-            // IMPORTANTE: Ahora enviamos el objeto 'profile' completo 
-            // para que el popup pueda mostrar la foto y los botones.
             const popupHTML = map.createPopupHTML(event, profile);
-            map.addMarker(event.id, lat, lon, popupHTML);
+            const tagCat = event.tags.find(t => t[0] === 't' && t[1] !== 'spatial_anchor');
+            const categoriaEvento = tagCat ? tagCat[1] : 'todos';
+            map.addMarker(event.id, lat, lon, popupHTML, categoriaEvento);
         }
     });
 }
@@ -44,84 +66,49 @@ function iniciarSuscripcion() {
 // Llamada inicial
 iniciarSuscripcion();
 
-// 2. Intentar centrar mapa por GPS al inicio
+// centrar mapa por GPS al inicio
 map.getCurrentLocation()
     .then(pos => map.setView(pos.lat, pos.lon))
     .catch(err => console.warn("Usando ubicación por defecto:", err));
 
 // --- VINCULACIÓN DE BOTONES ---
 
-// Login
-
-document.getElementById('btn-login').addEventListener('click', async () => {
-    try {
-        await AuthManager.login();
-        const pubkey = AuthManager.userPubkey;
-        const profile = await nostr.getUserProfile(pubkey);
-
-        const nameEl = document.getElementById('user-name');
-        const avatarEl = document.getElementById('user-avatar');
-        const statusEl = document.getElementById('user-status');
-        const loginBtn = document.getElementById('btn-login');
-
-        if (profile) {
-            // 1. Mostrar y actualizar Foto
-            if (profile.picture) {
-                avatarEl.src = profile.picture;
-                avatarEl.style.visibility = 'visible'; // Hacemos visible la foto
-            }
-            
-            // 2. Actualizar Nombre
-            nameEl.innerText = profile.display_name || profile.name || "Usuario";
-            
-            // 3. Mostrar y actualizar Estado
-            statusEl.innerText = "● Conectado";
-            statusEl.style.display = 'block';
-            statusEl.style.color = '#10b981'; // Verde esmeralda
-        }
-
-        // 4. Ocultar el botón de login
-        loginBtn.style.display = 'none';
-        
-        iniciarSuscripcion();
-
-    } catch (err) {
-        console.error("Error al identificar usuario:", err);
-        alert("No se pudo conectar: " + err.message);
-    }
-});
+initUI(nostr, iniciarSuscripcion);
 
 // Publicar Anclaje
 
 document.getElementById('btn-anchor').addEventListener('click', async () => {
-    // 1. Verificar si hay usuario usando el AuthManager
     if (!AuthManager.userPubkey) {
         alert("Debes iniciar sesión primero.");
         return;
     }
 
-    try {
-        // 2. Obtener posición (Uso 'map' porque así lo llamaste en la línea 5)
-        const pos = await map.getCurrentLocation(); 
+    const categoria = categorySelect.value;
+    if (!categoria) {
+    alert("⚠️ Por favor, selecciona una categoría para clasificar este punto.");
+    categorySelect.focus();
+    return;
+}
 
+    try {
+        const pos = await map.getCurrentLocation(); 
         const nombre = document.getElementById('poi-name').value || "Nuevo Punto";
         const desc = document.getElementById('poi-desc').value || "";
 
-        // 3. Crear el objeto de datos para el evento
         const eventData = {
     pubkey: AuthManager.userPubkey,
     content: `${nombre}\n\n${desc}`,
     tags: [
         ["g", GeoLogic.encode(pos.lat, pos.lon)],
-        ["t", "spatial_anchor"], // Asegúrate de que no haya espacios extra
+        ["t", "spatial_anchor"],
+        ["t", categoria],            // Tag de categoría (ej: 'gastronomia')
+        ["l", "category", categoria], // NIP-32 Label
         ["location", pos.lat + "," + pos.lon]
     ]
 };
 
-        // 4. Publicar (Esto ahora firma y envía correctamente)
         const signedEvent = await nostr.publishAnchor(eventData);
         
-        // 5. Dibujar en el mapa inmediatamente
         const name = AuthManager.getDisplayName(signedEvent.pubkey);
         const html = map.createPopupHTML(signedEvent, name);
         map.addMarker(signedEvent.id, pos.lat, pos.lon, html);
@@ -129,7 +116,6 @@ document.getElementById('btn-anchor').addEventListener('click', async () => {
     document.getElementById('poi-name').value = '';
     document.getElementById('poi-desc').value = '';
         
-    
             alert("¡Posición anclada con éxito!");
 
     } catch (err) {
@@ -138,17 +124,14 @@ document.getElementById('btn-anchor').addEventListener('click', async () => {
     }
 });
 
-// main.js
 
 window.followUser = async (pubkey, name) => {
     // 1. Verificamos si el usuario está logueado
     if (!AuthManager.userPubkey) {
         alert("¡Hola! Necesitas iniciar sesión para seguir a otros usuarios.");
-        // Opcional: podrías disparar AuthManager.login() aquí mismo
         return;
     }
 
-    // 2. Validación: No puedes seguirte a ti mismo
     if (pubkey === AuthManager.userPubkey) {
         alert("¡Ese eres tú! No puedes seguirte a ti mismo (aún).");
         return;
@@ -159,7 +142,6 @@ window.followUser = async (pubkey, name) => {
 };
 
 window.zapUser = (pubkey, name, titulo) => {
-    // 1. Verificamos sesión
     if (!AuthManager.userPubkey) {
         alert("Debes estar conectado para enviar Zaps.");
         return;
@@ -168,3 +150,26 @@ window.zapUser = (pubkey, name, titulo) => {
     console.log(`⚡ Zap iniciado para ${name} por: ${titulo}`);
     alert(`⚡ Próximamente: Enviando sats a ${name} por recomendar "${titulo}"`);
 };
+
+function toggleFilter(id, element) {
+    const yaEstabaActivo = element.classList.contains('active');
+
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+
+    const filtroAAplicar = yaEstabaActivo ? 'todos' : id;
+
+    if (!yaEstabaActivo) {
+        element.classList.add('active');
+    }
+
+    map.markers.forEach((marker) => {
+        const catMarcador = String(marker.categoria).toLowerCase().trim();
+        const catFiltro = String(filtroAAplicar).toLowerCase().trim();
+
+        if (catFiltro === 'todos' || catMarcador === catFiltro) {
+            marker.addTo(map.map);
+        } else {
+            marker.remove();
+        }
+    });
+}
