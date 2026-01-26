@@ -43,15 +43,17 @@ export class MapManager {
 
     /* Genera el HTML para el popup del marcador. */
 
-createPopupHTML(event, profile) {
+createPopupHTML(event, profile, categoriaId = 'general') {
     const name = profile?.display_name || profile?.name || event.pubkey.substring(0, 8);
     const picture = profile?.picture || 'https://www.gravatar.com/avatar/0000?d=mp&f=y';
     
-    // --- MEJORA: Separamos Título y Descripción ---
-    // Dividimos por el doble salto de línea que creamos en main.js
+    // Separamos Título y Descripción
     const partes = event.content.split('\n\n');
     const titulo = partes[0] || "Punto de interés";
     const descripcion = partes.slice(1).join('\n\n') || ""; 
+
+    // Convertimos el ID técnico (ej: 'gastronomia') en algo legible
+    const categoriaLabel = categoriaId.charAt(0).toUpperCase() + categoriaId.slice(1);
 
     return `
         <div class="popup-container">
@@ -64,8 +66,10 @@ createPopupHTML(event, profile) {
             </div>
 
             <div class="popup-content">
-                <strong style="display: block; font-size: 1.1em; margin-bottom: 5px;">${titulo}</strong>
-                <p style="margin: 0; color: #444; line-height: 1.4;">${descripcion}</p>
+                <strong class="popup-title">${titulo}</strong>
+                <span class="popup-category-badge">${categoriaLabel}</span>
+                
+                <p class="popup-description">${descripcion}</p>
             </div>
 
             <div class="popup-actions">
@@ -74,5 +78,23 @@ createPopupHTML(event, profile) {
             </div>
         </div>
     `;
+}
+// En ui-map.js, dentro de la clase MapManager
+async searchAddress(query) {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data && data.length > 0) {
+        const result = data[0];
+        const lat = parseFloat(result.lat);
+        const lon = parseFloat(result.lon);
+        
+        this.setView(lat, lon, 16); // Volamos hacia la dirección encontrada
+        return { lat, lon };
+    } else {
+        throw new Error("No se encontró la ubicación");
+    }
 }
 }

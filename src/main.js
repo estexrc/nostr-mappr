@@ -42,7 +42,6 @@ if (filterContainer && categorySelect) {
 
 function iniciarSuscripcion() {
     nostr.subscribeToAnchors(async (event) => {
-        // 1. Intentar obtener el perfil completo (Foto, Nombre real, etc.)
         let profile = AuthManager.profileCache[event.pubkey];
         
         if (!profile) {
@@ -55,9 +54,9 @@ function iniciarSuscripcion() {
         const hash = GeoLogic.getHashFromEvent(event);
         if (hash) {
             const { lat, lon } = GeoLogic.decode(hash);
-            const popupHTML = map.createPopupHTML(event, profile);
             const tagCat = event.tags.find(t => t[0] === 't' && t[1] !== 'spatial_anchor');
             const categoriaEvento = tagCat ? tagCat[1] : 'todos';
+            const popupHTML = map.createPopupHTML(event, profile, categoriaEvento);
             map.addMarker(event.id, lat, lon, popupHTML, categoriaEvento);
         }
     });
@@ -108,10 +107,10 @@ document.getElementById('btn-anchor').addEventListener('click', async () => {
 };
 
         const signedEvent = await nostr.publishAnchor(eventData);
-        
-        const name = AuthManager.getDisplayName(signedEvent.pubkey);
-        const html = map.createPopupHTML(signedEvent, name);
-        map.addMarker(signedEvent.id, pos.lat, pos.lon, html);
+
+        const currentProfile = AuthManager.profileCache[signedEvent.pubkey];
+        const html = map.createPopupHTML(signedEvent, currentProfile, categoria);
+        map.addMarker(signedEvent.id, pos.lat, pos.lon, html, categoria);
         
     document.getElementById('poi-name').value = '';
     document.getElementById('poi-desc').value = '';
@@ -173,3 +172,38 @@ function toggleFilter(id, element) {
         }
     });
 }
+
+document.getElementById('btn-search').onclick = async () => {
+    const query = document.getElementById('search-input').value;
+    if (!query) return;
+
+    try {
+        await map.searchAddress(query);
+    } catch (err) {
+        alert("¡Vaya! No pudimos encontrar ese lugar.");
+    }
+};
+
+const searchInput = document.getElementById('search-input');
+const searchBtn = document.getElementById('btn-search');
+
+async function ejecutarBusqueda() {
+    const query = searchInput.value.trim();
+    if (!query) return;
+
+    try {
+        // Usamos el método que ya tienes en ui-map.js
+        await map.searchAddress(query);
+        console.log(`Búsqueda exitosa: ${query}`);
+    } catch (err) {
+        alert("📍 Lo sentimos, no pudimos encontrar esa dirección.");
+    }
+}
+
+// Buscar al hacer clic en la lupa
+searchBtn.onclick = ejecutarBusqueda;
+
+// Buscar al presionar "Enter" en el teclado
+searchInput.onkeypress = (e) => {
+    if (e.key === 'Enter') ejecutarBusqueda();
+};
