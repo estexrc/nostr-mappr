@@ -8,47 +8,78 @@
     <link rel="stylesheet" href="src/style.css">
 </head>
 <body>
-
     <div id="map"></div>
 
-    <div id="controls" class="glass-panel p-4 bg-white/90 backdrop-blur-sm">
+    <div id="controls" class="glass-panel">
         
-        <div id="user-info" class="flex items-center gap-3 mb-4">
-    <img id="user-avatar" 
-     src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" 
-     style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid #ddd; object-fit: cover; background-color: #f0f0f0; display: block;" />
-    
-    <div id="user-details" class="flex flex-col">
-        <div class="flex items-center gap-2">
-            <span id="user-name" class="font-bold text-gray-800 text-sm">Invitado</span>
-            <button id="btn-login" class="text-xs bg-black text-white px-2 py-1 rounded-full font-semibold hover:opacity-80 transition-all flex items-center gap-1">
-                🔑 Conectar Nostr
-            </button>
+        <div id="view-anon" class="ui-section">
+    <div id="user-header"> 
+        <div class="user-avatar-group">
+             <img id="user-avatar" src="https://www.gravatar.com/avatar/0?d=mp" alt="Invitado">
+        <span id="user-name">Invitado</span>
         </div>
-        <span id="user-status" class="text-[10px] leading-tight" style="display: none;"></span>
+        <button id="btn-login">🔑 Conectar Nostr</button>
     </div>
 </div>
 
-        <hr class="separator">
-
-        <div class="form-group">
-            <label>Título del lugar</label>
-            <input type="text" id="poi-name" placeholder="Ej: Mi Café Favorito">
+        <div class="connected-header">
+    <div class="profile-group">
+        <img id="profile-avatar" src="" alt="Perfil"> <div class="profile-text">
+            <h3 id="profile-name">Cargando...</h3>
+            <span id="profile-pubkey">@...</span>
         </div>
+    </div>
+    <button id="btn-logout" title="Desconectar">✕</button>
+</div>
 
-        <div class="form-group">
-            <label>Descripción / Reseña</label>
-            <textarea id="poi-desc" placeholder="¿Qué hace especial a este sitio?" rows="3"></textarea>
-        </div>
+<div class="stats-row">
+    <div class="stat-item">
+        <span class="stat-val" id="stat-sats">0</span>
+        <span class="stat-label">⚡ Sats</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-val" id="stat-following">0</span>
+        <span class="stat-label">Siguiendo</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-val" id="stat-followers">0</span>
+        <span class="stat-label">Seguidores</span>
+    </div>
+</div>
 
-        <div class="form-group">
-            <label>URL de imagen del lugar</label>
-            <input type="text" id="poi-photo" placeholder="https://imagen.com/foto.jpg">
-        </div>
+<div class="nav-tabs">
+    <button id="tab-radar" class="tab-btn active">📡 Radar</button>
+    <button id="tab-diario" class="tab-btn">📓 Diario</button>
+</div>
 
-        <button id="btn-anchor" class="btn-primary">Anclar mi posición</button>
+<div id="section-radar" class="tab-content">
+    <div class="form-group">
+        <label>Título del lugar</label>
+        <input type="text" id="poi-name" placeholder="Ej: Café El Cairo">
+    </div>
+    
+    <div class="form-group">
+        <label>Descripción / Reseña</label>
+        <textarea id="poi-desc" rows="3" placeholder="¿Qué hace especial a este sitio?"></textarea>
+    </div>
 
-    </div> 
+    <div class="form-group">
+        <label>URL de Imagen (Opcional)</label>
+        <input type="text" id="poi-img" placeholder="https://...">
+    </div>
+
+    <button id="btn-anchor" class="btn-primary-action">
+        📍 Anclar mi posición
+    </button>
+</div>
+
+<div id="section-diario" class="tab-content" style="display: none;">
+    <div class="empty-state">
+        <p>No tienes borradores guardados.</p>
+    </div>
+    <div id="drafts-list"></div>
+</div>
+    </div>
     <script type="module" src="/src/main.js"></script> 
 </body>
 </html>
