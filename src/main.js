@@ -229,7 +229,7 @@ document.getElementById('btn-locate-me').onclick = async (e) => {
         alert("📍 Error al obtener ubicación");
     } finally {
         // Restauramos el icono original
-        icon.className = "fas fa-location-arrow";
+        icon.className = "fas fa-crosshairs";
     }
 };
 
