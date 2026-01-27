@@ -12,6 +12,7 @@ const ROSARIO_COORDS = [-32.9468, -60.6393];
 
 // --- INICIALIZACIÓN ---
 const map = new MapManager('map', ROSARIO_COORDS); 
+window.map = map;
 const nostr = new NostrService(RELAYS);
 const filterContainer = document.getElementById('filter-bar-container');
 const categorySelect = document.getElementById('poi-category');
@@ -175,6 +176,8 @@ function toggleFilter(id, element) {
 
 const searchInput = document.getElementById('search-input');
 const searchBtn = document.getElementById('btn-search');
+const btnClear = document.getElementById('btn-clear-search');
+
 
 async function ejecutarBusqueda() {
     const query = searchInput.value.trim();
@@ -196,6 +199,20 @@ searchBtn.onclick = ejecutarBusqueda;
 searchInput.onkeypress = (e) => {
     if (e.key === 'Enter') ejecutarBusqueda();
 };
+
+// Acción de limpiar
+btnClear.addEventListener('click', () => {
+    // Limpiar el campo de texto
+    searchInput.value = '';
+    btnClear.style.display = 'none';
+
+    // Llamar a la limpieza profunda del mapa
+    if (window.map && typeof window.map.clearSearchSelection === 'function') {
+        window.map.clearSearchSelection();
+    }
+
+    searchInput.focus();
+});
 
 document.getElementById('btn-locate-me').onclick = async (e) => {
     e.stopPropagation();
@@ -241,3 +258,10 @@ if (filterBar) {
         scrollRight.style.pointerEvents = scrollPos < maxScroll - 10 ? "auto" : "none";
     };
 }
+
+
+// Mostrar/ocultar la X según el contenido del input
+searchInput.addEventListener('input', () => {
+    btnClear.style.display = searchInput.value.length > 0 ? 'block' : 'none';
+});
+

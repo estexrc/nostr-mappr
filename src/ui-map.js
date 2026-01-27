@@ -82,9 +82,10 @@ createPopupHTML(event, profile, categoriaId = 'general') {
         </div>
     `;
 }
-// En ui-map.js, dentro de la clase MapManager
+
 async searchAddress(query) {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+    // Agregamos 'polygon_geojson=1' para recibir la geometría del lugar
+    const url = `https://nominatim.openstreetmap.org/search?format=json&polygon_geojson=1&q=${encodeURIComponent(query)}`;
     
     const response = await fetch(url);
     const data = await response.json();
@@ -93,11 +94,68 @@ async searchAddress(query) {
         const result = data[0];
         const lat = parseFloat(result.lat);
         const lon = parseFloat(result.lon);
+
+        // 1. Limpiar marcador y geometrías anteriores
+        if (this.tempSearchMarker) this.map.removeLayer(this.tempSearchMarker);
+        if (this.tempSearchGeometry) this.map.removeLayer(this.tempSearchGeometry);
+
+        // 2. Dibujar el perímetro o línea (Calle/Ciudad)
+if (result.geojson && result.geojson.type !== 'Point') { 
+    this.tempSearchGeometry = L.geoJSON(result.geojson, {
+        style: {
+            color: '#1a73e8',
+            weight: 5,
+            opacity: 0.6,
+            fillColor: '#1a73e8',
+            fillOpacity: 0.1
+        },
+        // Esto evita que GeoJSON cree marcadores azules extra
+        pointToLayer: () => null 
+    }).addTo(this.map);
+}
+
+// 3. Colocar el pin personalizado con el POPUP RECONECTADO
+this.tempSearchMarker = L.marker([lat, lon], {
+    icon: L.icon({
+        iconUrl: 'https://www.iconpacks.net/icons/2/free-location-pin-icon-2965-thumb.png',
+        iconSize: [45, 45],
+        iconAnchor: [22.5, 45],
+        popupAnchor: [0, -45],
+        className: 'marker-search-result'
+    })
+}).addTo(this.map);
+
+// Re-vinculamos el popup explícitamente
+this.tempSearchMarker.bindPopup(`
+    <div style="text-align: center; font-family: sans-serif;">
+        <strong style="color: #d32f2f;">📍 Ubicación encontrada</strong><br>
+        <p style="font-size: 13px; margin-top: 5px; color: #555;">${result.display_name}</p>
+    </div>
+`).openPopup();
         
-        this.setView(lat, lon, 16); // Volamos hacia la dirección encontrada
+        // 4. Ajustar la vista al área completa del resultado (zoom inteligente)
+        if (result.boundingbox) {
+            const b = result.boundingbox;
+            this.map.fitBounds([ [b[0], b[2]], [b[1], b[3]] ]);
+        } else {
+            this.setView(lat, lon, 16);
+        }
+
         return { lat, lon };
     } else {
         throw new Error("No se encontró la ubicación");
     }
+}
+
+clearSearchSelection() {
+    if (this.tempSearchGeometry) {
+        this.map.removeLayer(this.tempSearchGeometry);
+        this.tempSearchGeometry = null;
+    }
+    if (this.tempSearchMarker) {
+        this.map.removeLayer(this.tempSearchMarker);
+        this.tempSearchMarker = null;
+    }
+    this.map.closePopup();
 }
 }

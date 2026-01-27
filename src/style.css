@@ -542,6 +542,29 @@ select {
     transform: scale(1.1);
 }
 
+/* --- BOTÓN BORRAR BÚSQUEDA --- */
+#btn-clear-search {
+    background: transparent;
+    border: none;
+    color: #999;
+    font-size: 18px;
+    padding: 0 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+
+#btn-clear-search:hover {
+    color: #333;
+}
+
+/* Ajuste sutil al search-container para que no salte el ancho */
+#search-container {
+    justify-content: space-between;
+    align-items: center;
+}
+
 /* BOTÓN CENTRAR EN MI UBICACIÓN */
 
 #btn-locate-me {
@@ -593,4 +616,24 @@ select {
 
 .leaflet-bar a:hover {
     background-color: #f4f4f4 !important;
+}
+
+.marker-search-result {
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    z-index: 1000 !important;
+    pointer-events: auto !important;
+}
+
+/* Pequeña animación para que destaque al aparecer */
+@keyframes pin-bounce {
+    0% { transform: translateY(-20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+.marker-search-result {
+    animation: pin-bounce 0.4s ease-out;
+}
+
+.leaflet-interactive {
+    outline: none;
 }
