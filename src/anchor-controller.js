@@ -70,6 +70,7 @@ export function initAnchor(mapManager, nostrService) {
             // Limpiar formulario
             document.getElementById('poi-name').value = '';
             document.getElementById('poi-desc').value = '';
+            categorySelect.value = '';
 
         } catch (err) {
             console.error("Error al anclar:", err);
