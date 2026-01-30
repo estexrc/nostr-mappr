@@ -23,9 +23,10 @@ window.map = map;
 
 initSearch(map);
 initFilters(map);
-initAnchor(map);
 
 const nostr = new NostrService(RELAYS);
+
+initAnchor(map, nostr);
 
 // Cargar puntos existentes
 const eventosProcesados = new Set();
