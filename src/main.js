@@ -152,3 +152,46 @@ window.borrarPunto = async (eventId) => {
         alert("Ocurrió un error inesperado al intentar borrar.");
     }
 };
+
+window.addEventListener('trigger-pop', (e) => {
+    const { lat, lng } = e.detail;
+
+    // Centramos el mapa en el usuario para que vea su marcador
+    window.map.setView(lat, lng, 18);
+
+    if (window.tempPoPMarker) window.map.map.removeLayer(window.tempPoPMarker);
+
+    // El marcador ahora es FIJO (draggable: false) para asegurar presencia
+    window.tempPoPMarker = L.marker([lat, lng], {
+        draggable: false, 
+        icon: L.divIcon({
+            className: 'pop-temp-marker',
+            html: '<i class="fas fa-thumbtack" style="color: #8e44ad; font-size: 30px;"></i>',
+            iconAnchor: [15, 30]
+        })
+    }).addTo(window.map.map);
+
+    window.tempPoPMarker.bindPopup(`
+    <div class="pop-decision-container">
+        <strong>📍 Ubicación Confirmada</strong>
+        <p>Estás aquí. ¿Cómo quieres registrar este punto?</p>
+        <div class="pop-btn-grid">
+            <button onclick="window.abrirModalResena(${lat}, ${lng})" class="btn-pop-resena">
+                📝 Reseña
+            </button>
+            <button onclick="window.abrirModalBorrador(${lat}, ${lng})" class="btn-pop-draft">
+                💾 Borrador
+            </button>
+        </div>
+    </div>
+`, { closeButton: false, offset: [0, -10] }).openPopup();
+});
+
+window.abrirModalResena = (lat, lng) => {
+    alert(`Abriendo formulario de reseña para: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+};
+
+window.abrirModalBorrador = (lat, lng) => {
+    // Aquí llamaremos al modal de "Anclaje Provisorio" que diseñaremos a continuación
+    alert("Guardando como borrador rápido...");
+};

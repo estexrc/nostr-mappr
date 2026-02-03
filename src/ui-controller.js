@@ -92,7 +92,7 @@ export function closeModal() {
 /* Inicializa los eventos de los botones flotantes. */
 
 export function initUI(nostrInstance) {
-    // 1. Referencia al botón (Asegúrate de que el ID coincida con tu HTML)
+
     const userBtn = document.getElementById('user-floating-btn'); 
     const modalContainer = document.getElementById('modal-container');
 
@@ -106,7 +106,6 @@ export function initUI(nostrInstance) {
             
             openModal(getProfileModalHTML(profile));
 
-            // Listeners internos del modal
             document.getElementById('btn-modal-login')?.addEventListener('click', async () => {
                 await AuthManager.login();
                 location.reload();
@@ -125,8 +124,28 @@ export function initUI(nostrInstance) {
     }
 
     // 2. Click en PoP
-    document.getElementById('btn-quick-pop')?.addEventListener('click', () => {
-        window.dispatchEvent(new CustomEvent('trigger-pop'));
+    const btnQuickPop = document.getElementById('btn-quick-pop');
+
+            btnQuickPop?.addEventListener('click', async () => {
+        // 1. Efecto visual de carga
+        const originalContent = btnQuickPop.innerHTML;
+        btnQuickPop.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; 
+        btnQuickPop.style.opacity = "0.7";
+
+        try {
+            // 2. Pedimos ubicación
+            const pos = await window.map.getCurrentLocation();
+            
+            window.dispatchEvent(new CustomEvent('trigger-pop', { 
+                detail: { lat: pos.lat, lng: pos.lon } 
+            }));
+        } catch (err) {
+            alert("📍 Error: No se pudo obtener ubicación.");
+        } finally {
+            // 3. Restauramos el botón
+            btnQuickPop.innerHTML = originalContent;
+            btnQuickPop.style.opacity = "1";
+        }
     });
 
     // 3. Click en Diario

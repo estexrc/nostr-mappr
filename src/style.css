@@ -749,3 +749,53 @@ input:checked + .test-slider:before { transform: translateX(16px); }
 }
 
 .btn-login-modal:hover, .btn-logout-modal:hover { transform: scale(1.02); }
+
+/* Contenedor del Popup PoP */
+.pop-decision-container {
+    padding: 10px;
+    min-width: 180px;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+}
+
+.pop-decision-container strong {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: #1a1a1a;
+}
+
+.pop-decision-container p {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 12px;
+}
+
+/* Botones con tus estilos de diseño */
+.pop-btn-grid {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-pop-resena {
+    flex: 1;
+    background: linear-gradient(135deg, #5851db, #8e44ad);
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.btn-pop-draft {
+    flex: 1;
+    background: #f0f0f0;
+    color: #444;
+    border: none;
+    padding: 8px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 12px;
+}
