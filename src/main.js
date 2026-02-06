@@ -291,42 +291,79 @@ window.abrirModalBorrador = (lat, lng) => {
     }
 };
 
-// main.js
+/*  Fetches Kind 30024 events from Nostr relays and populates the Journal table.
+    Also renders semi-transparent orange markers on the map for these drafts. */
 
-window.cargarYMostrarDiario = async () => {
+window.fetchAndShowJournal = async () => {
     const pubkey = AuthManager.userPubkey;
-    const bodyTabla = document.querySelector('.journal-table tbody');
+    const tableBody = document.querySelector('.journal-table tbody');
     
-    if (bodyTabla) {
-        bodyTabla.innerHTML = '<tr><td colspan="6"><i class="fas fa-spinner fa-spin"></i> Consultando Relays...</td></tr>';
+    // 1. Visual feedback while loading
+    if (tableBody) {
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 40px;"><i class="fas fa-spinner fa-spin"></i> Fetching from Relays...</td></tr>';
     }
 
     try {
-        // Consultamos a los relays por eventos Kind 30024 de nuestra autoría
-        const filtros = {
+        // 2. Define filter for Kind 30024 (Drafts) owned by the user
+        const filters = {
             kinds: [30024],
             authors: [pubkey],
-            "#t": ["spatial_anchor"] // Filtramos solo nuestros anclajes
+            "#t": ["spatial_anchor"]
         };
 
-        const eventosBorradores = await nostr.fetchEvents(filtros);
+        const draftEvents = await nostr.fetchEvents(filters);
 
-        // Actualizamos el modal con los datos reales
-        openModal(getJournalModalHTML(eventosBorradores));
+        // 3. Map Management: Draw orange markers (65% opacity)
+        if (window.journalLayerGroup) {
+            window.map.map.removeLayer(window.journalLayerGroup);
+        }
+        window.journalLayerGroup = L.layerGroup().addTo(window.map.map);
 
-        // Re-vinculamos el cierre porque openModal refresca el contenido
-        document.getElementById('btn-close-journal').onclick = () => closeModal();
+        draftEvents.forEach(ev => {
+            const coordsTag = ev.tags.find(t => t[0] === 'g')?.[1];
+            if (coordsTag) {
+                const [lat, lng] = coordsTag.split(',');
+                
+                L.marker([parseFloat(lat), parseFloat(lng)], {
+                    icon: L.divIcon({
+                        className: 'draft-marker-orange',
+                        html: `<i class="fas fa-thumbtack" style="color: rgba(255, 165, 0, 0.65); font-size: 25px;"></i>`,
+                        iconAnchor: [12, 25]
+                    })
+                }).addTo(window.journalLayerGroup);
+            }
+        });
+
+        // 4. Update UI: Open the modal with real data
+        openModal(getJournalModalHTML(draftEvents));
+
+        // 5. Re-bind the close button
+        const closeBtn = document.getElementById('btn-close-journal');
+        if (closeBtn) closeBtn.onclick = () => closeModal();
 
     } catch (err) {
-        console.error("Error al cargar el diario:", err);
-        if (bodyTabla) {
-            bodyTabla.innerHTML = '<tr><td colspan="6">Error al conectar con los relays.</td></tr>';
+        console.error("Error fetching journal:", err);
+        if (tableBody) {
+            tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: #e74c3c;">Failed to sync with relays.</td></tr>';
         }
     }
 };
 
-// Función auxiliar para que el botón "📍 Ver" de la tabla funcione
-window.centrarMapa = (lat, lng) => {
+/* Centers the map and places a temporary highlight marker. */
+window.centerMapAndHighlight = (lat, lng) => {
     closeModal();
     window.map.setView(lat, lng, 16);
+    
+    if (window.tempHighlightMarker) {
+        window.map.map.removeLayer(window.tempHighlightMarker);
+    }
+
+    window.tempHighlightMarker = L.marker([lat, lng], {
+        icon: L.divIcon({
+            className: 'highlight-pin',
+            html: '<i class="fas fa-thumbtack" style="color: #3498db; font-size: 30px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>',
+            iconAnchor: [15, 30]
+        })
+    }).addTo(window.map.map);
 };
+

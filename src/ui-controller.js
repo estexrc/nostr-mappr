@@ -17,7 +17,7 @@ function getProfileModalHTML(profile = null) {
         // VISTA: USUARIO CONECTADO
         const npubShort = AuthManager.userPubkey.substring(0, 10) + '...';
         return `
-            <div class="profile-modal-inner">
+            <div class="profile-modal-inner connected-mode">
                 <button class="close-btn" onclick="closeModal()">✕</button>
                 <div class="profile-main-header">
                     <img src="${profile.picture || 'https://www.gravatar.com/avatar/0?d=mp'}" alt="Avatar" class="large-avatar">
@@ -146,7 +146,7 @@ export function getJournalModalHTML(eventosBorrador = []) {
     }).join('');
 
     return `
-        <div class="profile-modal-inner journal-modal-content">
+        <div class="profile-modal-inner">
             <button class="close-btn" id="btn-close-journal">✕</button>
             <h2 style="font-size: 24px; font-weight: 800; color: #1a1a1a; align-self: center;">Diario de anclajes</h2>
             
@@ -241,8 +241,8 @@ export function initUI(nostrInstance) {
         openModal(getJournalModalHTML([])); 
         
         // Llamamos a la función global que definiremos en main.js
-        if (window.cargarYMostrarDiario) {
-            window.cargarYMostrarDiario();
+        if (window.fetchAndShowJournal) {
+            window.fetchAndShowJournal();
         }
 
         const closeBtn = document.getElementById('btn-close-journal');
