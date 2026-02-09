@@ -50,9 +50,10 @@ function iniciarSuscripcion() {
         const hash = GeoLogic.getHashFromEvent(event);
         if (hash) {
             const { lat, lon } = GeoLogic.decode(hash);
+            const profile = AuthManager.profileCache[event.pubkey] || null;
             const tagCat = event.tags.find(t => t[0] === 't' && t[1] !== 'spatial_anchor');
             const categoriaEvento = tagCat ? tagCat[1] : 'todos';
-            const popupHTML = map.createPopupHTML(event, null, categoriaEvento);
+            const popupHTML = map.createPopupHTML(event, profile, categoriaEvento);
             map.addMarker(event.id, lat, lon, popupHTML, categoriaEvento);
         }
     });
@@ -244,6 +245,8 @@ window.abrirModalBorrador = (lat, lng) => {
         btnSave.onclick = async () => {
             const titleInput = document.getElementById('draft-title');
             const title = titleInput ? titleInput.value.trim() : "";
+            const categoryInput = document.getElementById('draft-category');
+            const categoria = categoryInput ? categoryInput.value : "";
 
             if (!title) {
                 alert("Por favor, ponle un nombre al lugar.");
@@ -259,12 +262,14 @@ window.abrirModalBorrador = (lat, lng) => {
                 // Construcción del evento de borrador bajo estándar Nostr
                 const eventoBorrador = {
                     kind: 30024,
+                    pubkey: AuthManager.userPubkey,
                     content: `Borrador de anclaje creado desde la app.`,
                     tags: [
-                        ["d", `anchor_${Date.now()}`],      // Identificador único
-                        ["title", title],                  // Título para la tabla del diario
-                        ["g", `${lat},${lng}`],            // Coordenadas geográficas
-                        ["t", "spatial_anchor"]            // Tag para filtrado en relays
+                        ["d", `anchor_${Date.now()}`],
+                        ["title", title],                  
+                        ["g", `${lat},${lng}`],            
+                        ["t", "spatial_anchor"],            
+                        ["t", categoria],
                     ],
                     created_at: Math.floor(Date.now() / 1000)
                 };

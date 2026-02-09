@@ -74,7 +74,7 @@ export class MapManager {
         const titulo = isDraft ? (event.tags.find(t => t[0] === 'title')?.[1] || "Borrador") : (partes[0] || "Punto de interés");
         const descripcion = isDraft ? "" : (partes.slice(1).join('\n\n') || ""); 
         
-        const infoCat = !isDraft ? (CATEGORIAS.find(c => c.id === categoriaId) || CATEGORIAS.find(c => c.id === 'nostr')) : null;
+        const infoCat = CATEGORIAS.find(c => c.id === categoriaId) || CATEGORIAS.find(c => c.id === 'nostr');
 
         const actionsHTML = isDraft ? `
             <button onclick="window.completeAnchor('${event.id}')" class="btn-popup btn-follow">🚀 Publish</button>
@@ -96,7 +96,7 @@ export class MapManager {
                 </div>
                 <div class="popup-content">
                     <strong class="popup-title">${titulo}</strong>
-                    ${infoCat ? `<span class="popup-category-badge"><i class="fas ${infoCat.icon}"></i> ${infoCat.label}</span>` : ''}
+                    ${infoCat ? `<span class="popup-category-badge"></i> ${infoCat.label}</span>` : ''}
                     <p class="popup-description">${descripcion}</p>
                 </div>
                 <div class="popup-actions">

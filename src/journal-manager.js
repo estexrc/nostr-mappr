@@ -40,8 +40,10 @@ export class JournalManager {
         const [lat, lng] = coordsTag.split(',');
         const categoria = event.tags.find(t => t[0] === 't' && t[1] !== 'spatial_anchor')?.[1] || 'todos';
 
+        const profile = AuthManager.profileCache[event.pubkey] || null;
+
         // Usamos el generador de popups de ui-map con isDraft = true
-        const popupHTML = this.map.createPopupHTML(event, null, categoria, true);
+        const popupHTML = this.map.createPopupHTML(event, profile, categoria, true);
 
         // addMarker ahora se encarga de que sea NARANJA
         this.map.addMarker(event.id, parseFloat(lat), parseFloat(lng), popupHTML, categoria, 'draft');

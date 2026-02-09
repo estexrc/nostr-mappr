@@ -13,34 +13,39 @@ export function initFilters(mapManager) {
         chip.className = 'filter-chip';
         chip.textContent = cat.label;
         
-        chip.onclick = () => {
-            toggleFilter(cat.id, chip, mapManager);
-        };
+        chip.onclick = () => toggleFilter(cat.id, chip, mapManager);
         filterContainer.appendChild(chip);
     });
 
-    // 2. Lógica de Scroll
+    // 2. Lógica de Scroll Mejorada
+    const checkScroll = () => {
+        const scrollPos = filterContainer.scrollLeft;
+        const maxScroll = filterContainer.scrollWidth - filterContainer.clientWidth;
+        
+        if (scrollLeft) {
+            scrollLeft.style.opacity = scrollPos > 5 ? "1" : "0";
+            scrollLeft.style.visibility = scrollPos > 5 ? "visible" : "hidden";
+        }
+        if (scrollRight) {
+            // Si el scroll máximo es mayor a 0, significa que hay desborde
+            const showRight = scrollPos < maxScroll - 5;
+            scrollRight.style.opacity = showRight ? "1" : "0";
+            scrollRight.style.visibility = showRight ? "visible" : "hidden";
+        }
+    };
+
     if (scrollRight && scrollLeft) {
-        if (scrollRight && scrollLeft) {
-        // Cambiamos filterBar por filterContainer aquí:
         scrollRight.onclick = () => filterContainer.scrollBy({ left: 240, behavior: 'smooth' });
         scrollLeft.onclick = () => filterContainer.scrollBy({ left: -240, behavior: 'smooth' });
+        filterContainer.onscroll = checkScroll;
 
-        // Y cambiamos filterBar por filterContainer aquí también:
-        filterContainer.onscroll = () => {
-            const scrollPos = filterContainer.scrollLeft;
-            const maxScroll = filterContainer.scrollWidth - filterContainer.clientWidth;
-            
-            scrollLeft.style.opacity = scrollPos > 10 ? "1" : "0";
-            scrollLeft.style.pointerEvents = scrollPos > 10 ? "auto" : "none";
-            scrollRight.style.opacity = scrollPos < maxScroll - 10 ? "1" : "0";
-            scrollRight.style.pointerEvents = scrollPos < maxScroll - 10 ? "auto" : "none";
-        };
-    }
+        // NUEVO: Comprobación inicial apenas se cargan los chips
+        setTimeout(checkScroll, 300); 
     }
 }
 
-// 3. Función de Filtrado
+
+// 3. Función de Filtrado Modularizada
 function toggleFilter(id, element, mapManager) {
     const yaEstabaActivo = element.classList.contains('active');
     document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
@@ -51,14 +56,20 @@ function toggleFilter(id, element, mapManager) {
         element.classList.add('active');
     }
 
+    // Recorremos todos los marcadores usando la nueva estructura
     mapManager.markers.forEach((marker) => {
         const catMarcador = String(marker.categoria).toLowerCase().trim();
         const catFiltro = String(filtroAAplicar).toLowerCase().trim();
 
         if (catFiltro === 'todos' || catMarcador === catFiltro) {
-            marker.addTo(mapManager.map);
+            // Decidimos en qué capa volver a ponerlo
+            if (marker.markerType === 'draft') {
+                marker.addTo(mapManager.draftLayer);
+            } else {
+                marker.addTo(mapManager.publicLayer);
+            }
         } else {
-            marker.remove();
+            marker.remove(); // Se quita visualmente pero sigue en MapManager.markers
         }
     });
 }

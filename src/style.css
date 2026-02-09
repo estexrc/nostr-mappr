@@ -262,7 +262,7 @@ input:focus, textarea:focus {
     position: absolute;
     top: 20px;
     left: 10px;
-    right: 360px;
+    right: 180px; 
     display: flex;
     align-items: center;
     gap: 12px;
@@ -275,7 +275,7 @@ input:focus, textarea:focus {
     align-items: center;
     flex-grow: 1;
     position: relative;
-    pointer-events: auto;
+    pointer-events: auto; 
     overflow: hidden;
 }
 
@@ -286,35 +286,37 @@ input:focus, textarea:focus {
     scrollbar-width: none;
     pointer-events: auto;
     flex-grow: 1;
-    padding-right: 45px; 
+    padding: 5px 40px; 
     scroll-behavior: smooth;
 }
 
-.scroll-arrow {
+#btn-scroll-left, #btn-scroll-right {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    border: none;
-    width: 45px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1200; 
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: #000;
-    z-index: 10;
-    transition: opacity 0.3s ease;
+    pointer-events: auto !important;
+    transition: opacity 0.3s, visibility 0.3s;
+    opacity: 0;
+    visibility: hidden;
 }
 
-.scroll-arrow.right {
-    right: 0;
-    background: linear-gradient(to left, white 60%, rgba(255,255,255,0));
-    border-radius: 0 25px 25px 0;
-}
+#btn-scroll-left { left: 0; }
+#btn-scroll-right { right: 0; }
 
-.scroll-arrow.left {
-    left: 0;
-    background: linear-gradient(to right, white 60%, rgba(255,255,255,0));
-    border-radius: 25px 0 0 25px;
+#btn-scroll-left:hover, #btn-scroll-right:hover {
+    background: #f8f8f8;
+    transform: translateY(-50%) scale(1.1);
 }
 
 #filter-bar-container::-webkit-scrollbar {
@@ -586,6 +588,7 @@ input:checked + .test-slider:before { transform: translateX(16px); }
     gap: 12px;
     cursor: pointer;
     pointer-events: auto;
+    max-width: 160px;
 }
 
 #user-avatar-small {
@@ -601,7 +604,7 @@ input:checked + .test-slider:before { transform: translateX(16px); }
     flex-direction: column;
 }
 
-#user-name-mini { font-size: 14px; font-weight: 800; color: #1a1a1a; }
+#user-name-mini { font-size: 14px; font-weight: 800; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
 #user-pubkey-mini { font-size: 11px; color: #666; font-family: monospace; }
 
 /* 2. Botonera Lateral (Centro Derecha) */

@@ -1,5 +1,6 @@
 // ui-controller.js
 import { AuthManager } from './auth.js';
+import { CATEGORIAS } from './categories.js';
 
 // --- ELEMENTOS FLOTANTES ---
 const userNameMini = document.getElementById('user-name-mini');
@@ -58,6 +59,7 @@ function getProfileModalHTML(profile = null) {
 }
 
 export function getDraftModalHTML(lat, lng) {
+    const opciones = CATEGORIAS.map(cat => `<option value="${cat.id}">${cat.label}</option>`).join('');
     return `
         <div class="profile-modal-inner draft-modal">
             <button class="close-btn" id="btn-close-draft">✕</button>
@@ -72,6 +74,14 @@ export function getDraftModalHTML(lat, lng) {
                        style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); margin-top: 5px;">
             </div>
 
+            <div class="form-group" style="width: 100%; text-align: left; margin-bottom: 15px;">
+                <label>CATEGORÍA</label>
+                <select id="draft-category" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); margin-top: 5px;">
+                    <option value="">Seleccionar categoría...</option>
+                    ${opciones}
+                </select>
+            </div>
+            
             <div class="photo-upload-zone" id="upload-zone" style="width: 100%; border: 2px dashed rgba(88, 81, 219, 0.3); padding: 20px; border-radius: 20px; text-align: center; cursor: pointer; background: rgba(255,255,255,0.3);">
                 <i class="fas fa-camera" style="font-size: 24px; color: #8e44ad; margin-bottom: 10px;"></i>
                 <p style="font-size: 11px; font-weight: bold; color: #8e44ad; margin: 0;">SUBIR O TOMAR FOTO</p>
@@ -122,6 +132,9 @@ export function getJournalModalHTML(eventosBorrador = []) {
         const coords = ev.tags.find(t => t[0] === 'g')?.[1] || '0,0';
         const [lat, lng] = coords.split(',');
         const fecha = new Date(ev.created_at * 1000).toLocaleDateString();
+        const catId = ev.tags.find(t => t[0] === 't' && t[1] !== 'spatial_anchor')?.[1];
+        const infoCat = CATEGORIAS.find(c => c.id === catId);
+        const categoriaTexto = infoCat ? infoCat.label : '-';
 
         return `
             <tr>
@@ -133,7 +146,7 @@ export function getJournalModalHTML(eventosBorrador = []) {
                         <i class="fas fa-map-marker-alt"></i> Ver
                     </a>
                 </td>
-                <td style="color: #999;">-</td>
+                <td style="color: #5851db; font-weight: 600;">${categoriaTexto}</td>
                 <td class="journal-status-text">Anclado</td>
                 <td>
                     <div class="actions-row">
