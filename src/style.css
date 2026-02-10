@@ -320,7 +320,7 @@ input:focus, textarea:focus {
 }
 
 #filter-bar-container::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    display: none;
 }
 
 /* El Chip (Etiqueta) individual */

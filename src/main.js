@@ -8,6 +8,7 @@ import { initFilters } from './filter-controller.js';
 import { initAnchor } from './anchor-controller.js';
 import { initSearch } from './search-controller.js';
 import { JournalManager } from './journal-manager.js';
+import { UserActions } from './user-actions.js';
 
 // --- CONFIGURACIÓN ---
 const RELAYS = ['wss://nos.lol', 'wss://relay.primal.net', 'wss://relay.damus.io']; 
@@ -73,32 +74,11 @@ map.getCurrentLocation()
 
 initUI(nostr);
 
+// --- ACCIONES DE USUARIO (MODULARIZADO) ---
+window.followUser = (pubkey, name) => UserActions.followUser(pubkey, name);
+window.zapUser = (pubkey, name, titulo) => UserActions.zapUser(pubkey, name, titulo);
+window.borrarPunto = (eventId) => UserActions.borrarPunto(eventId, map, nostr);
 
-window.followUser = async (pubkey, name) => {
-    // 1. Verificamos si el usuario está logueado
-    if (!AuthManager.userPubkey) {
-        alert("¡Hola! Necesitas iniciar sesión para seguir a otros usuarios.");
-        return;
-    }
-
-    if (pubkey === AuthManager.userPubkey) {
-        alert("¡Ese eres tú! No puedes seguirte a ti mismo (aún).");
-        return;
-    }
-
-    console.log(`✅ Siguiendo a ${name} (${pubkey})`);
-    alert(`Próximamente: Siguiendo a ${name} en la red Nostr`);
-};
-
-window.zapUser = (pubkey, name, titulo) => {
-    if (!AuthManager.userPubkey) {
-        alert("Debes estar conectado para enviar Zaps.");
-        return;
-    }
-
-    console.log(`⚡ Zap iniciado para ${name} por: ${titulo}`);
-    alert(`⚡ Próximamente: Enviando sats a ${name} por recomendar "${titulo}"`);
-};
 
 document.getElementById('btn-locate-me').onclick = async (e) => {
     e.stopPropagation();
@@ -131,40 +111,6 @@ map.map.on('popupopen', (e) => {
         }
     }
 });
-
-window.borrarPunto = async (eventId) => {
-    // 1. Confirmación de seguridad
-    if (!confirm("¿Deseas eliminar permanentemente este anclaje de la red Nostr?")) return;
-
-    console.log(`🗑️ Intentando borrar evento: ${eventId}`);
-
-    try {
-        // 2. Llamamos al servicio de Nostr para firmar el borrado (Kind 5)
-        const exito = await nostr.deleteEvent(eventId); 
-
-        if (exito) {
-            // 3. Si tuvo éxito, lo eliminamos visualmente del mapa
-            const marcador = map.markers.get(eventId);
-            if (marcador) {
-                map.map.removeLayer(marcador);
-                map.markers.delete(eventId);
-            }
-            
-            // 4. Lo quitamos de nuestra lista de control interna
-            if (typeof eventosProcesados !== 'undefined') {
-                eventosProcesados.delete(eventId);
-            }
-            
-            alert("✅ Solicitud de borrado enviada con éxito.");
-        } else {
-            alert("❌ Hubo un problema al procesar el borrado.");
-        }
-    } catch (err) {
-        console.error("Error en el proceso de borrado:", err);
-        alert("Ocurrió un error inesperado al intentar borrar.");
-    }
-};
-
 
 window.addEventListener('trigger-pop', (e) => {
     const { lat, lng } = e.detail;
@@ -298,8 +244,6 @@ window.abrirModalBorrador = (lat, lng) => {
         };
     }
 };
-
-
 
 /* Centers the map and places a temporary highlight marker. */
 window.centerMapAndHighlight = (lat, lng) => {
