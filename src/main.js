@@ -11,7 +11,6 @@ import { DraftController } from './draft-controller.js';
 import { UserActions } from './user-actions.js';
 import { initUI, openModal, closeModal } from './ui-controller.js';
 import { initFilters } from './filter-controller.js';
-import { initAnchor } from './anchor-controller.js';
 import { initSearch } from './search-controller.js';
 
 // --- 2. CONFIGURACIÓN Y ESTADO INICIAL ---
@@ -63,7 +62,6 @@ function iniciarSuscripcion() {
 // --- 5. INICIALIZACIÓN DE CONTROLADORES DE INTERFAZ ---
 initSearch(map);
 initFilters(map);
-initAnchor(map, nostr);
 initUI(nostr);
 
 // Sincronización de datos iniciales
@@ -81,7 +79,6 @@ map.getCurrentLocation()
 // Gestión del Diario
 window.fetchAndShowJournal = () => journal.openJournal();
 window.deleteDraft = (id) => journal.deleteDraft(id);
-window.syncDrafts = () => journal.syncDrafts();
 window.centerMapAndHighlight = (lat, lng) => {
     closeModal(); 
     window.map.setView(lat, lng, 16); 
@@ -127,6 +124,7 @@ window.addEventListener('trigger-pop', (e) => {
             </div>
         </div>
     `, { closeButton: false, offset: [0, -10] }).openPopup();
+        showToast("📍 Punto detectado. Define tu registro.", "success");
 });
 
 // Botón de geolocalización rápida
@@ -137,8 +135,9 @@ document.getElementById('btn-locate-me').onclick = async (e) => {
     try {
         const pos = await map.getCurrentLocation();
         map.setView(pos.lat, pos.lon, 16);
+        showToast("📍 Ubicación actualizada", "success");
     } catch (err) {
-        alert("📍 Error al obtener ubicación");
+        showToast("📍 Error al obtener ubicación", "error");
     } finally {
         icon.className = "fas fa-crosshairs";
     }

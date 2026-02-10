@@ -93,7 +93,7 @@ export const DraftController = {
             const desc = document.getElementById('pub-description').value.trim();
             const cat = document.getElementById('pub-category').value;
 
-            if (!title) return alert("El título es obligatorio.");
+            if (!title) return showToast("⚠️ El título es obligatorio", "error");
 
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PUBLICANDO...';
             btn.disabled = true;
@@ -114,7 +114,7 @@ export const DraftController = {
                 const success = await nostrService.publishEvent(publicEvent);
                 if (success) {
                     if (eventId) await journalManager.deleteDraft(eventId);
-                    alert("🚀 ¡Publicado con éxito!");
+                    showToast("🚀 ¡Anclaje publicado con éxito!", "success"); 
                     closeModal();
                 }
             } catch (err) {
@@ -131,12 +131,58 @@ export const DraftController = {
         if (uploadZone && fileInput) uploadZone.onclick = () => fileInput.click();
     },
 
+    /* Lógica para guardar un borrador (Kind 30024) en el Diario */
     initSaveLogic(lat, lng, nostrService, journalManager) {
         const btnSave = document.getElementById('btn-save-draft');
-        if (btnSave) {
-            btnSave.onclick = async () => {
-                // ... lógica de guardado 30024 existente ...
-            };
-        }
+        if (!btnSave) return;
+
+        btnSave.onclick = async () => {
+            const titleInput = document.getElementById('draft-title');
+            const categorySelect = document.getElementById('draft-category');
+            
+            const title = titleInput ? titleInput.value.trim() : "";
+            const category = categorySelect ? categorySelect.value : "gastronomia";
+
+            // Validación básica antes de procesar
+            if (!title) {
+                showToast("⚠️ Por favor, ingresa un título para el borrador", "error");
+                return;
+            }
+
+            btnSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> GUARDANDO...';
+            btnSave.disabled = true;
+
+            try {
+                // Construcción del evento Kind 30024 (Borrador Parametrizado)
+                const draftEvent = {
+                    kind: 30024,
+                    content: `Borrador de anclaje: ${title}`,
+                    tags: [
+                        ["d", `draft_${Date.now()}`], // Identificador único requerido para 30024
+                        ["title", title],
+                        ["t", "spatial_anchor"],
+                        ["t", category],
+                        ["g", `${lat},${lng}`]
+                    ],
+                    created_at: Math.floor(Date.now() / 1000)
+                };
+
+                const success = await nostrService.publishEvent(draftEvent);
+
+                if (success) {
+                    // Sincronizamos el diario para que el nuevo punto aparezca en la lista
+                    await journalManager.syncDrafts(); 
+                    showToast(`✅ "${title}" guardado en tu Diario`, "success");
+                    closeModal();
+                } else {
+                    throw new Error("Relay rechazo el evento");
+                }
+            } catch (err) {
+                console.error("Error al guardar borrador:", err);
+                showToast("❌ No se pudo guardar el borrador", "error");
+                btnSave.disabled = false;
+                btnSave.innerHTML = 'GUARDAR EN DIARIO';
+            }
+        };
     }
 };

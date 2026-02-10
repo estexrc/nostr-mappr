@@ -15,7 +15,7 @@ export function initSearch(mapManager) {
             await mapManager.searchAddress(query);
             console.log(`Búsqueda exitosa: ${query}`);
         } catch (err) {
-            alert("📍 Lo sentimos, no pudimos encontrar esa dirección.");
+            showToast("📍 Lo sentimos, no encontramos esa dirección", "error");
         }
     }
 

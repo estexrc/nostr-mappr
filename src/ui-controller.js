@@ -235,7 +235,7 @@ export function initUI(nostrInstance) {
                 detail: { lat: pos.lat, lng: pos.lon } 
             }));
         } catch (err) {
-            alert("📍 Error: No se pudo obtener ubicación.");
+            showToast("📍 Error de ubicación", "error");
         } finally {
             // 3. Restauramos el botón
             btnQuickPop.innerHTML = originalContent;
@@ -246,7 +246,7 @@ export function initUI(nostrInstance) {
     // 3. Click en Diario
     document.getElementById('btn-open-journal')?.addEventListener('click', async () => {
         if (!AuthManager.isLoggedIn()) {
-            alert("Debes conectar tu identidad Nostr para ver tu Diario.");
+            showToast("Debes conectar tu identidad Nostr para ver tu Diario.", "error");
             return;
         }
 
@@ -323,3 +323,58 @@ export function getPublishModalHTML(lat, lng) {
         </div>
     `;
 }
+
+export function showToast(message, type = 'success', duration = 3000) {
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast-card ${type}`;
+    
+    const icon = type === 'success' ? '🚀' : '⚠️';
+    toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+
+    container.appendChild(toast);
+
+    // Animación de salida y limpieza
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(20px) scale(0.9)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+window.showToast = showToast;
+
+export function getConfirmModalHTML(message, onConfirm) {
+    window.executeConfirmAction = () => {
+        onConfirm();
+        closeModal();
+    };
+
+    return `
+        <div class="modal-card glass-panel-modal" style="max-width: 320px; text-align: center; padding: 30px;">
+            <div style="font-size: 40px; margin-bottom: 15px;">⚠️</div>
+            <h3 style="color: #5851db; margin-bottom: 10px; font-size: 20px;">¿Confirmar acción?</h3>
+            <p style="font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 25px;">${message}</p>
+            
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button onclick="window.closeModal()" class="glass-input" 
+                        style="margin-top:0; cursor:pointer; font-weight:700; background: rgba(0,0,0,0.05);">
+                    CANCELAR
+                </button>
+                <button onclick="window.executeConfirmAction()" class="btn-primary-publish" 
+                        style="margin-top:0; background: #e74c3c; padding: 10px 20px; flex: 1;">
+                    ELIMINAR
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+window.closeModal = closeModal;

@@ -1,5 +1,6 @@
 import { AuthManager } from './auth.js';
-import { openModal, closeModal, getJournalModalHTML } from './ui-controller.js';
+import { openModal, closeModal, getJournalModalHTML, getConfirmModalHTML } from './ui-controller.js';
+import { showToast } from './ui-controller.js';
 
 export class JournalManager {
     constructor(mapManager, nostrService) {
@@ -52,7 +53,7 @@ export class JournalManager {
     /* Abre el modal del diario con los datos ya cargados */
     async openJournal() {
         if (!AuthManager.isLoggedIn()) {
-            alert("Debes conectar tu identidad Nostr.");
+            showToast("🔑 Debes conectar tu identidad Nostr.", "error");
             return;
         }
 
@@ -66,17 +67,23 @@ export class JournalManager {
     }
 
     async deleteDraft(eventId) {
-        if (!confirm("¿Eliminar este borrador permanentemente?")) return;
+        // Definimos la acción de borrar
+        const performDelete = async () => {
+            const success = await this.nostr.deleteEvent(eventId);
+            if (success) {
+                const marker = this.map.markers.get(eventId);
+                if (marker) this.map.draftLayer.removeLayer(marker);
+                this.map.markers.delete(eventId);
+                this.drafts = this.drafts.filter(d => d.id !== eventId);
+                showToast("🗑️ Borrador eliminado", "success");
+                this.openJournal(); 
+            } else {
+                showToast("❌ No se pudo eliminar", "error");
+            }
+        };
 
-        const success = await this.nostr.deleteEvent(eventId);
-        if (success) {
-            // Eliminación visual inmediata
-            const marker = this.map.markers.get(eventId);
-            if (marker) this.map.draftLayer.removeLayer(marker);
-            this.map.markers.delete(eventId);
-            
-            this.drafts = this.drafts.filter(d => d.id !== eventId);
-            this.openJournal(); // Refresca la tabla si está abierta
-        }
+        // Abrimos el modal personalizado en lugar del confirm nativo
+        openModal(getConfirmModalHTML("Esta acción no se puede deshacer.", performDelete));
     }
+      
 }
