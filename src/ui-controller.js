@@ -1,4 +1,4 @@
-// ui-controller.js
+
 import { AuthManager } from './auth.js';
 import { CATEGORIAS } from './categories.js';
 
@@ -283,33 +283,43 @@ export function initUI(nostrInstance) {
         }
     }
 }
-    export function getPublishModalHTML(lat, lng) {
+
+export function getPublishModalHTML(lat, lng) {
+    const categoryOptions = CATEGORIAS.map(cat => 
+        `<option value="${cat.id}">${cat.label}</option>`
+    ).join('');
+
     return `
         <div class="modal-card glass-panel-modal">
             <button id="btn-close-publish" class="close-btn-alt">×</button>
-            <h2 style="color: #5851db; margin-bottom: 5px;">🚀 Publicar Anclaje</h2>
-            <p style="font-size: 12px; color: #666; margin-bottom: 20px;">📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}</p>
+            <h2 class="modal-title">🚀 Publicar Anclaje</h2>
+            <p class="modal-coords">📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}</p>
             
             <div class="form-group">
-                <label>Nombre del Lugar</label>
-                <input type="text" id="pub-title" placeholder="Ej: Café de la Esquina...">
+                <label>NOMBRE DEL LUGAR</label>
+                <input type="text" id="pub-title" class="glass-input" placeholder="Ej: Café de la Esquina..">
             </div>
 
             <div class="form-group">
-                <label>Descripción / Reseña</label>
-                <textarea id="pub-description" placeholder="Cuéntanos por qué este lugar es especial..." style="width:100%; height:80px; padding:10px; border-radius:12px; border:1px solid #ddd;"></textarea>
+                <label>DESCRIPCIÓN / RESEÑA</label>
+                <textarea id="pub-description" class="glass-textarea" placeholder="Cuéntanos por qué este lugar es especial..."></textarea>
             </div>
 
             <div class="form-group">
-                <label>Categoría</label>
-                <select id="pub-category">
-                    <option value="gastronomia">🍔 Gastronomía</option>
-                    <option value="parques">🌳 Parques y Plazas</option>
-                    <option value="salud">🏥 Salud</option>
+                <label>CATEGORÍA</label>
+                <select id="pub-category" class="glass-select">
+                    ${categoryOptions} 
                 </select>
             </div>
 
-            <button id="btn-do-publish" class="btn-primary">PUBLICAR EN NOSTR</button>
+            <div id="pub-upload-zone" class="upload-zone-publish">
+                <input type="file" id="pub-photo" multiple accept="image/*" style="display: none;">
+                <i class="fas fa-camera"></i>
+                <p>SUBIR O TOMAR FOTO</p>
+            </div>
+            <div id="pub-preview-container" class="preview-grid"></div>
+
+            <button id="btn-do-publish" class="btn-primary-publish">PUBLICAR EN NOSTR</button>
         </div>
     `;
 }

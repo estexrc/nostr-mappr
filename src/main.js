@@ -32,12 +32,25 @@ function iniciarSuscripcion() {
         if (eventosProcesados.has(event.id)) return;
         eventosProcesados.add(event.id);
 
-        const hash = GeoLogic.getHashFromEvent(event);
-        if (hash) {
-            const { lat, lon } = GeoLogic.decode(hash);
+        const geoData = GeoLogic.getHashFromEvent(event);
+        if (geoData) {
+            let lat, lon;
+            
+            // Si geoData ya es un objeto (coordenadas directas), lo usamos
+            if (typeof geoData === 'object') {
+                lat = geoData.lat;
+                lon = geoData.lon;
+            } else {
+                // Si es un geohash, lo decodificamos
+                const decoded = GeoLogic.decode(geoData);
+                lat = decoded.lat;
+                lon = decoded.lon;
+            }
+
             const profile = AuthManager.profileCache[event.pubkey] || null;
             
-            // Identificación de categoría
+            // Aquí buscas la categoría. Al haber dos 't', find() devolverá el primero 
+            // que NO sea 'spatial_anchor', lo cual es correcto.
             const tagCat = event.tags.find(t => t[0] === 't' && t[1] !== 'spatial_anchor');
             const categoriaEvento = tagCat ? tagCat[1] : 'todos';
 
