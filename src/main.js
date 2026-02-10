@@ -84,10 +84,14 @@ window.zapUser = (pubkey, name, titulo) => UserActions.zapUser(pubkey, name, tit
 window.borrarPunto = (eventId) => UserActions.borrarPunto(eventId, map, nostr);
 
 // Flujos de Anclaje y Publicación
-window.abrirModalBorrador = (lat, lng) => DraftController.abrirModal(lat, lng, map, nostr, journal);
-window.abrirModalResena = (lat, lng) => alert(`Formulario de reseña: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
-window.completeAnchor = (eventId) => alert("Publishing feature will be available on Monday!");
-
+window.openDraftModal = (lat, lng) => DraftController.openDraftModal(lat, lng, map, nostr, journal);
+window.openReviewModal = (lat, lng) => DraftController.openReviewModal(lat, lng, map, nostr, journal);
+window.completeAnchor = (eventId) => {
+    const marker = map.markers.get(eventId);
+    if (!marker) return;
+    const { lat, lng } = marker.getLatLng();
+    DraftController.openPublishModal(eventId, lat, lng, map, nostr, journal);
+};
 // --- 7. EVENTOS DE MAPA Y UX ---
 
 // Lógica de "Point of Presence" (PoP)
@@ -105,8 +109,8 @@ window.addEventListener('trigger-pop', (e) => {
             <strong>📍 Ubicación Confirmada</strong>
             <p>¿Cómo quieres registrar este punto?</p>
             <div class="pop-btn-grid">
-                <button onclick="window.abrirModalResena(${lat}, ${lng})" class="btn-pop-resena">📝 Review</button>
-                <button onclick="window.abrirModalBorrador(${lat}, ${lng})" class="btn-pop-draft">💾 Draft</button>
+                <button onclick="window.openReviewModal(${lat}, ${lng})" class="btn-pop-resena">📝 Review</button>
+                <button onclick="window.openDraftModal(${lat}, ${lng})" class="btn-pop-draft">💾 Draft</button>
             </div>
         </div>
     `, { closeButton: false, offset: [0, -10] }).openPopup();
