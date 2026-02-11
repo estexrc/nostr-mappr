@@ -2,7 +2,7 @@
 
 ### _Decentralized Map Journal & Location Log_
 
-**Nostr Spatial Anchors** is a privacy-focused, decentralized web application that allows users to create a personal logbook of locations directly on the **Nostr protocol** ⚡. Built with a clean, "glassmorphism" aesthetic, it bridges the gap between physical locations and digital identity.
+**Nostr Spatial Anchors** is a privacy-focused, decentralized web client that allows users to create a personal logbook of locations directly on the **Nostr protocol** ⚡. Built with a clean, "glassmorphism" aesthetic, it bridges the gap between physical locations and digital identity.
 
 ---
 
