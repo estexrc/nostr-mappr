@@ -102,6 +102,22 @@ window.completeAnchor = (eventId) => {
     const { lat, lng } = marker.getLatLng();
     DraftController.openPublishModal(eventId, lat, lng, map, nostr, journal);
 };
+window.centerMapAndOpenPopup = (eventId, lat, lng) => {
+    closeModal();
+    const marker = map.markers.get(eventId);
+    if (!marker) return;
+    const onMoveEnd = () => {
+        setTimeout(() => {
+            marker.openPopup(); 
+            map.map.off('moveend', onMoveEnd);
+        }, 100);
+    };
+    map.map.on('moveend', onMoveEnd);
+    map.map.flyTo([lat, lng], 18, {
+        animate: true,
+        duration: 1.5
+    });
+};
 // --- 7. EVENTOS DE MAPA Y UX ---
 
 // Lógica de "Point of Presence" (PoP)

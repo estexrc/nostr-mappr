@@ -897,7 +897,7 @@ input:checked + .test-slider:before { transform: translateX(16px); }
     cursor: pointer;
     border: none;
     background: none;
-    font-size: 18px;
+    font-size: 1.3rem;
     padding: 5px;
     transition: transform 0.2s;
 }

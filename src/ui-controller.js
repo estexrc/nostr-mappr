@@ -159,16 +159,13 @@ export function getJournalModalHTML(eventos = []) {
             <tr>
                 <td class="journal-date">${fecha}</td>
                 <td style="font-weight: 700;">${titulo}</td>
-                <td>
-                    <a href="#" class="geo-link" onclick="window.centerMapAndHighlight(${lat}, ${lng})" 
-                       style="display: flex; align-items: center; gap: 6px; color: #5851db; text-decoration: none; font-weight: 700;">
-                        <i class="fas fa-map-marker-alt"></i> Ver
-                    </a>
-                </td>
                 <td style="color: #5851db; font-weight: 600;">${categoriaTexto}</td>
                 <td style="text-align: center;">${statusBadge}</td>
                 <td>
                     <div class="actions-row">
+                    <button class="btn-action-icon" 
+                        onclick="window.centerMapAndOpenPopup('${ev.id}', ${lat}, ${lng})" 
+                        title="Ver en mapa">📍</button>
                         ${config.canPublish ? `<button class="btn-action-icon" onclick="window.completeAnchor('${ev.id}')">🚀</button>` : ''}
                         <button class="btn-action-icon" onclick="window.deleteDraft('${ev.id}')">🗑️</button>
                     </div>
@@ -177,7 +174,7 @@ export function getJournalModalHTML(eventos = []) {
         `;
     }).join('');
 
-    // Estructura de contenedores original intacta
+    // Estructura de contenedores
     return `
         <div class="profile-modal-inner" style="max-width: 800px;">
             <button class="close-btn" id="btn-close-journal">✕</button>
@@ -189,7 +186,6 @@ export function getJournalModalHTML(eventos = []) {
                         <tr>
                             <th>Fecha</th>
                             <th>Título</th>
-                            <th>Ubicación</th>
                             <th>Categoría</th>
                             <th>Estado</th>
                             <th style="text-align: center;">Acción</th>
