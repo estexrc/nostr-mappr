@@ -1118,3 +1118,37 @@ input:checked + .test-slider:before { transform: translateX(16px); }
 }
 .status-pill.public { background: rgba(88, 81, 219, 0.1); color: #5851db; }
 .status-pill.draft { background: rgba(230, 126, 34, 0.1); color: #e67e22; }
+
+
+@media (max-width: 768px) {
+    /* Bajamos la barra de búsqueda para que no tape el notch */
+    #top-interface-wrapper {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #search-container {
+        width: 100% !important;
+    }
+
+    /* Movemos los botones laterales un poco hacia arriba para que no los tape el pulgar */
+    #side-actions-container {
+        right: 15px;
+        gap: 15px;
+    }
+
+    .action-fab {
+        width: 55px;
+        height: 55px;
+    }
+
+    /* Los modales deben ocupar casi toda la pantalla en móvil */
+    .modal-card.glass-panel-modal {
+        width: 95%;
+        padding: 20px;
+        margin: 10px;
+    }
+}
