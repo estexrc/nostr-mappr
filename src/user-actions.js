@@ -10,7 +10,7 @@ export const UserActions = {
         }
 
         if (pubkey === AuthManager.userPubkey) {
-            showToast("❌ You cannot follow yourself.", "error");
+            showToast("You cannot follow yourself.", "error");
             return;
         }
 
@@ -21,13 +21,13 @@ export const UserActions = {
     /* Handles the Zap (Lightning payment) initialization. */
     zapUser(pubkey, name, title) {
         if (!AuthManager.isLoggedIn()) {
-            showToast("⚡ Connect your account to send Zaps", "error");
+            showToast("Connect your account to send Zaps", "error");
             return;
         }
 
         const displayName = AuthManager.getDisplayName(pubkey) || name;
-        console.log(`⚡ Zap initiated for ${displayName} for: ${title}`);
-        showToast(`⚡ Sending sats to ${displayName} for recommending "${title}"`, "success");
+        console.log(`Zap initiated for ${displayName} for: ${title}`);
+        showToast(`Sending sats to ${displayName} for recommending "${title}"`, "success");
     },
 
     /* Logic for deleting an existing anchor (Kind 5 request). */
@@ -46,13 +46,13 @@ export const UserActions = {
                     }
                     
                     if (processedEvents) processedEvents.delete(eventId);
-                    showToast("✅ Deletion request sent", "success");
+                    showToast("Deletion request sent", "success");
                 } else {
-                    showToast("❌ Relay could not process the deletion", "error");
+                    showToast("Relay could not process the deletion", "error");
                 }
             } catch (err) {
                 console.error("Error in deletion process:", err);
-                showToast("❌ Unexpected error while deleting", "error");
+                showToast("Unexpected error while deleting", "error");
             }
         };
 

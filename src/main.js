@@ -102,7 +102,7 @@ window.fetchAndShowJournal = () => {
 };
 
 /* Bridge for Deleting entries */
-window.deleteEntry = (eventId) => { /* Renamed from deleteDraft to match JournalManager */
+window.deleteEntry = (eventId) => {
     journal.deleteEntry(eventId);
 };
 
@@ -116,6 +116,16 @@ window.completeAnchor = (eventId) => {
             DraftController.openPublishModal(eventId, lat, lng, map, nostr, journal);
         }
     }
+};
+
+/* Bridge for Follow logic */
+window.followUser = (pubkey, name) => {
+    UserActions.followUser(pubkey, name);
+};
+
+/* Bridge for Zap logic */
+window.zapUser = (pubkey, name, title) => {
+    UserActions.zapUser(pubkey, name, title);
 };
 
 /* Bridge for Deleting public anchors (Kind 5) */
