@@ -161,11 +161,28 @@ export const DraftController = {
                         created_at: Math.floor(Date.now() / 1000)
                     };
 
-    /* Append each image URL as an individual tag */
-    imageUrls.forEach(url => publicEvent.tags.push(["image", url]));
+                /* Append each image URL as an individual tag */
+                imageUrls.forEach(url => publicEvent.tags.push(["image", url]));
 
                 const success = await nostrService.publishEvent(publicEvent);
-                /* ... rest of your existing success logic (delete draft, toast, etc.) */
+
+                if (success) {
+                showToast("Anchor published successfully!", "success");
+                
+                /* 1. Clear the temporary files array */
+                DraftController.selectedFiles = []; 
+                
+                /* 2. If this was a draft, delete it from the journal */
+                if (eventId && journalManager) {
+                    await journalManager.deleteEntry(eventId);
+                }
+
+                /* 3. Close the modal automatically */
+                closeModal(); 
+            } else {
+                throw new Error("Relays did not acknowledge the event");
+            }
+
             } catch (err) {
                 console.error("Publish failed:", err);
                 btn.disabled = false;
