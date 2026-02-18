@@ -80,9 +80,13 @@ export class MapManager {
         const description = isDraft ? "" : (parts.slice(1).join('\n\n') || ""); 
         
         const imageTag = event.tags.find(t => t[0] === 'image' || t[0] === 'imeta');
-        const contentImageMatch = event.content.match(/https?:\/\/[^\s]+\.(?:jpg|jpeg|png|webp|gif)/i);
+        const contentImageMatch = event.content.match(/https?:\/\/[^\s]+(?:\.jpg|\.jpeg|\.png|\.webp|\.gif|\.bmp)(?:\?[^\s]*)?/i);
         const imageUrl = imageTag ? imageTag[1] : (contentImageMatch ? contentImageMatch[0] : null);
 
+        if (!imageUrl && event.content.includes("http")) {
+            console.log("Se detectó un link pero no se reconoció como imagen:", event.content);
+        }
+        
         const imageHTML = imageUrl ? `
             <div class="popup-image-container" style="margin: 10px 0; overflow: hidden; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">
                 <img src="${imageUrl}" 

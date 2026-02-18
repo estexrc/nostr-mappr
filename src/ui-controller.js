@@ -83,13 +83,13 @@ export function getDraftModalHTML(lat, lng) {
                 </select>
             </div>
             
-            <div class="photo-upload-zone" id="upload-zone" style="width: 100%; border: 2px dashed rgba(88, 81, 219, 0.3); padding: 20px; border-radius: 20px; text-align: center; cursor: pointer; background: rgba(255,255,255,0.3);">
+            <div class="photo-upload-zone" id="draft-upload-zone" style="width: 100%; border: 2px dashed rgba(88, 81, 219, 0.3); padding: 20px; border-radius: 20px; text-align: center; cursor: pointer; background: rgba(255,255,255,0.3);">
                 <i class="fas fa-camera" style="font-size: 24px; color: #8e44ad; margin-bottom: 10px;"></i>
                 <p style="font-size: 11px; font-weight: bold; color: #8e44ad; margin: 0;">UPLOAD OR TAKE PHOTO</p>
                 <input type="file" id="draft-photo" accept="image/*" multiple style="display: none;">
             </div>
             <div id="preview-container" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;"></div>
-
+            <div id="draft-preview-container" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;"></div>
             <button id="btn-save-draft" class="btn-primary">
                 SAVE TO JOURNAL
             </button>
