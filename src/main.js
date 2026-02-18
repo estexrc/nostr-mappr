@@ -215,15 +215,40 @@ document.getElementById('btn-quick-pop').onclick = async (e) => {
 };
 
 /* Rapid Geolocation Button */
+/* main.js - Sección 7: Rapid Geolocation Mejorada */
+
 document.getElementById('btn-locate-me').onclick = async (e) => {
     e.stopPropagation();
     const icon = e.currentTarget.querySelector('i');
+    
+    map.clearSearchSelection(); 
+
     icon.className = "fas fa-spinner fa-spin"; 
+    
     try {
         const pos = await map.getCurrentLocation();
-        map.setView(pos.lat, pos.lon, 16);
+        const lat = Number(pos.lat);
+        const lng = Number(pos.lon);
+
+        map.setView(lat, lng, 16);
+
+        const locMarker = map.addMarker('temp-pop', lat, lng, '', 'none', 'temp');
+        
+        locMarker.bindPopup(`
+            <div style="text-align: center; padding: 5px;">
+                <strong style="display: block; margin-bottom: 5px;">📍 You're here</strong>
+                <p style="margin: 0; font-size: 13px; color: #666;">
+                    Ready to <b>PoP</b> this spot?
+                </p>
+            </div>
+        `, {
+            closeButton: true,
+            offset: [0, -10]
+        }).openPopup();
+
         window.showToast("Location updated", "success");
     } catch (err) {
+        console.error("Locate error:", err);
         window.showToast("Error getting location", "error");
     } finally {
         icon.className = "fas fa-crosshairs";
