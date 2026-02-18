@@ -79,6 +79,19 @@ export class MapManager {
         const title = isDraft ? (event.tags.find(t => t[0] === 'title')?.[1] || "Draft") : (parts[0] || "Point of Interest");
         const description = isDraft ? "" : (parts.slice(1).join('\n\n') || ""); 
         
+        const imageTag = event.tags.find(t => t[0] === 'image' || t[0] === 'imeta');
+        const contentImageMatch = event.content.match(/https?:\/\/[^\s]+\.(?:jpg|jpeg|png|webp|gif)/i);
+        const imageUrl = imageTag ? imageTag[1] : (contentImageMatch ? contentImageMatch[0] : null);
+
+        const imageHTML = imageUrl ? `
+            <div class="popup-image-container" style="margin: 10px 0; overflow: hidden; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">
+                <img src="${imageUrl}" 
+                     style="width: 100%; max-height: 150px; object-fit: cover; display: block; cursor: zoom-in;" 
+                     onerror="this.style.display='none'"
+                     onclick="window.open('${imageUrl}', '_blank')">
+            </div>
+        ` : '';
+
         const catInfo = CATEGORIAS.find(c => c.id === categoryId) || CATEGORIAS.find(c => c.id === 'nostr');
 
         /* Actions updated to match the new global functions in main.js. */
@@ -103,6 +116,7 @@ export class MapManager {
                 <div class="popup-content">
                     <strong class="popup-title">${title}</strong>
                     ${catInfo ? `<span class="popup-category-badge"></i> ${catInfo.label}</span>` : ''}
+                    ${imageHTML}
                     <p class="popup-description">${description}</p>
                 </div>
                 <div class="popup-actions">
