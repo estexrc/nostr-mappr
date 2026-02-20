@@ -53,7 +53,11 @@ function getProfileModalHTML(profile = null) {
                 </div>
 
                 <div class="w-full text-left">
-                    <p class="text-sm text-slate-600 leading-relaxed mb-6 italic line-clamp-3">"${profile.about || 'No description provided on Nostr.'}"</p>
+                    <p id="profile-about" class="text-sm text-slate-600 leading-relaxed mb-6 italic">
+                        "${profile.about?.length > 150
+                ? `${profile.about.substring(0, 150)}... <button onclick="window.showFullDescription('profile')" class="text-indigo-600 font-bold not-italic">Ver más</button>`
+                : (profile.about || 'No description provided on Nostr.')}"
+                    </p>
                     ${isReadOnly ? `
                         <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 text-xs text-indigo-700 font-medium">
                             Conecta una extensión o usa Nostr Connect para poder publicar anclas.
@@ -220,8 +224,10 @@ export function getJournalModalHTML(entries = []) {
         return `
             <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
                 <td class="py-4 pl-6 text-[11px] font-bold text-slate-400 uppercase tracking-tighter">${date}</td>
-                <td class="py-4 font-black text-slate-800 text-sm truncate max-w-[150px]">${title}</td>
-                <td class="py-4 font-bold text-indigo-500 text-[11px] uppercase">${categoryText}</td>
+                <td class="py-4 max-w-[200px] font-black text-slate-800 text-sm truncate">${title}</td>
+                <td class="py-4">
+                    <span class="font-bold text-indigo-500 text-[10px] uppercase tracking-wider">${categoryText}</span>
+                </td>
                 <td class="py-4 text-center">
                     <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase text-white ${config.color}">${config.label}</span>
                 </td>
@@ -247,7 +253,7 @@ export function getJournalModalHTML(entries = []) {
                     <thead>
                         <tr class="bg-slate-50/80 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
                             <th class="py-3 pl-6">Fecha</th>
-                            <th class="py-3">Título</th>
+                            <th class="py-3">Lugar</th>
                             <th class="py-3">Categoría</th>
                             <th class="py-3 text-center">Estado</th>
                             <th class="py-3 pr-6 text-right">Acción</th>
@@ -468,6 +474,24 @@ export function showToast(message, type = 'success', duration = 3000) {
 }
 
 window.showToast = showToast;
+
+export function getDescriptionModalHTML(title, description) {
+    return `
+        <div class="p-8 flex flex-col gap-6 animate-in fade-in zoom-in duration-300">
+            <button class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl transition-colors" onclick="closeModal()">✕</button>
+            <div class="text-center">
+                <h2 class="text-2xl font-black text-slate-900">${title}</h2>
+                <div class="h-1 w-12 bg-indigo-500 rounded-full mx-auto mt-2"></div>
+            </div>
+            <div class="text-sm text-slate-600 leading-relaxed max-h-[60vh] overflow-y-auto custom-scrollbar pr-2 italic">
+                ${description.replace(/\n/g, '<br>')}
+            </div>
+            <button onclick="closeModal()" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all">
+                CERRAR
+            </button>
+        </div>
+    `;
+}
 
 export function getConfirmModalHTML(message, onConfirm) {
     window.executeConfirmAction = () => {

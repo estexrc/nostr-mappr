@@ -1,48 +1,62 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Nostr Spatial Anchoring</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="src/style.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📍</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📍</text></svg>">
 </head>
+
 <body class="h-full w-full overflow-hidden bg-slate-50 font-sans">
     <div id="map" class="h-screen w-screen z-10"></div>
-    
+
     <!-- Top Interface: Search & Filters -->
-    <div id="top-interface-wrapper" class="absolute top-5 left-2.5 right-[180px] flex items-center gap-3 z-[950] pointer-events-none md:right-[200px]">
-        <div id="search-container" class="flex items-center justify-between w-[350px] shrink-0 bg-white/80 backdrop-blur-md border border-white/30 rounded-full shadow-lg p-1 pointer-events-auto transition-all duration-300">
-            <input type="text" id="search-input" placeholder="Buscar dirección o ciudad..." class="w-full bg-transparent border-none px-4 py-2 outline-none text-sm text-slate-800 placeholder:text-slate-400">
-            <button id="btn-clear-search" class="hidden px-2 text-slate-400 hover:text-slate-600 transition-colors">✕</button>
-            <button id="btn-search" class="bg-slate-900 text-white p-2 rounded-full hover:scale-110 transition-transform flex items-center justify-center">🔍</button>
+    <div id="top-interface-wrapper"
+        class="absolute top-5 left-2.5 right-[180px] flex items-center gap-3 z-[950] pointer-events-none md:right-[200px]">
+        <div id="search-container"
+            class="flex items-center justify-between w-[350px] shrink-0 bg-white/80 backdrop-blur-md border border-white/30 rounded-full shadow-lg p-1 pointer-events-auto transition-all duration-300">
+            <input type="text" id="search-input" placeholder="Buscar dirección o ciudad..."
+                class="w-full bg-transparent border-none px-4 py-2 outline-none text-sm text-slate-800 placeholder:text-slate-400">
+            <button id="btn-clear-search"
+                class="hidden px-2 text-slate-400 hover:text-slate-600 transition-colors">✕</button>
+            <button id="btn-search"
+                class="bg-slate-900 text-white p-2 rounded-full hover:scale-110 transition-transform flex items-center justify-center">🔍</button>
         </div>
-       
+
         <div id="filter-scroll-wrapper" class="relative flex items-center grow pointer-events-auto overflow-hidden">
-            <button id="btn-scroll-left" class="absolute left-0 z-[1200] w-9 h-9 rounded-full bg-white border border-slate-100 shadow-md flex items-center justify-center cursor-pointer pointer-events-auto opacity-0 invisible transition-all">
+            <button id="btn-scroll-left"
+                class="absolute left-0 z-[1200] w-9 h-9 rounded-full bg-white border border-slate-100 shadow-md flex items-center justify-center cursor-pointer pointer-events-auto opacity-0 invisible transition-all">
                 <i class="fas fa-chevron-left text-slate-600"></i>
             </button>
 
-            <div id="filter-bar-container" class="flex gap-2 overflow-x-auto scrollbar-none grow px-10 py-1 scroll-smooth">
+            <div id="filter-bar-container"
+                class="flex gap-2 overflow-x-auto scrollbar-none grow px-10 py-1 scroll-smooth">
                 <!-- Chips injected here -->
             </div>
 
-            <button id="btn-scroll-right" class="absolute right-0 z-[1200] w-9 h-9 rounded-full bg-white border border-slate-100 shadow-md flex items-center justify-center cursor-pointer pointer-events-auto transition-all">
+            <button id="btn-scroll-right"
+                class="absolute right-0 z-[1200] w-9 h-9 rounded-full bg-white border border-slate-100 shadow-md flex items-center justify-center cursor-pointer pointer-events-auto transition-all">
                 <i class="fas fa-chevron-right text-slate-600"></i>
             </button>
         </div>
     </div>
 
     <!-- Location Button -->
-    <button id="btn-locate-me" title="Centrar en mi ubicación" class="absolute bottom-[95px] right-3 z-[1000] w-10 h-10 bg-white border border-slate-200 rounded-lg shadow-md flex items-center justify-center hover:bg-slate-50 transition-colors"> 
-        <i class="fas fa-crosshairs text-slate-700 text-lg"></i> 
+    <button id="btn-locate-me" title="Centrar en mi ubicación"
+        class="absolute bottom-[95px] right-3 z-[1000] w-10 h-10 bg-white border border-slate-200 rounded-lg shadow-md flex items-center justify-center hover:bg-slate-50 transition-colors">
+        <i class="fas fa-crosshairs text-slate-700 text-lg"></i>
     </button>
-    
+
     <!-- User Button -->
-    <div id="user-floating-btn" class="absolute top-5 right-5 z-[1100] bg-white/60 backdrop-blur-md border border-white/40 rounded-full shadow-xl p-2 flex items-center gap-3 cursor-pointer pointer-events-auto max-w-[180px] hover:bg-white/80 transition-all">
-        <img id="user-avatar-small" src="https://www.gravatar.com/avatar/0?d=mp" alt="User" class="w-10 h-10 rounded-full border-2 border-indigo-500 object-cover shadow-sm">
+    <div id="user-floating-btn"
+        class="absolute top-5 right-5 z-[1100] bg-white/60 backdrop-blur-md border border-white/40 rounded-full shadow-xl p-2 flex items-center gap-3 cursor-pointer pointer-events-auto max-w-[180px] hover:bg-white/80 transition-all">
+        <img id="user-avatar-small" src="https://www.gravatar.com/avatar/0?d=mp" alt="User"
+            class="w-10 h-10 rounded-full border-2 border-indigo-500 object-cover shadow-sm">
         <div class="user-info-mini flex flex-col overflow-hidden">
             <span id="user-name-mini" class="text-sm font-extrabold text-slate-900 truncate">Invitado</span>
             <span id="user-pubkey-mini" class="text-[10px] text-slate-500 font-mono">@...</span>
@@ -50,35 +64,46 @@
     </div>
 
     <!-- Side Actions -->
-    <div id="side-actions-container" class="absolute right-5 top-1/2 -translate-y-1/2 flex flex-col gap-5 z-[1100] pointer-events-auto">
-        <button id="btn-open-journal" class="w-16 h-16 rounded-full bg-white/60 backdrop-blur-md border border-white/40 shadow-xl flex flex-col items-center justify-center gap-1 hover:scale-110 transition-transform group" title="Diario">
+    <div id="side-actions-container"
+        class="absolute right-5 top-1/2 -translate-y-1/2 flex flex-col gap-5 z-[1100] pointer-events-auto">
+        <button id="btn-open-journal"
+            class="w-16 h-16 rounded-full bg-white/60 backdrop-blur-md border border-white/40 shadow-xl flex flex-col items-center justify-center gap-1 hover:scale-110 transition-transform group"
+            title="Diario">
             <i class="fas fa-book text-indigo-600 text-xl group-hover:text-indigo-700"></i>
             <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-500">Diario</span>
         </button>
-        
-        <button id="btn-quick-pop" class="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30 flex flex-col items-center justify-center gap-1 border border-white/20 hover:scale-110 transition-transform" title="Proof of Presence">
+
+        <button id="btn-quick-pop"
+            class="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30 flex flex-col items-center justify-center gap-1 border border-white/20 hover:scale-110 transition-transform"
+            title="Proof of Presence">
             <i class="fas fa-map-pin text-xl"></i>
             <span class="text-[9px] font-extrabold uppercase tracking-wider">PoP</span>
         </button>
     </div>
 
     <!-- Main Modal Container -->
-    <div id="modal-container" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[2000] hidden items-center justify-center p-4">
-        <div id="modal-content" class="bg-white/70 backdrop-blur-xl border border-white/50 rounded-[32px] shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
+    <div id="modal-container"
+        class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[2000] hidden items-center justify-center p-4">
+        <div id="modal-content"
+            class="bg-white/70 backdrop-blur-xl border border-white/50 rounded-[32px] shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
             <!-- Dynamic content -->
         </div>
     </div>
 
     <script type="module" src="/src/main.js"></script>
-    
+
     <!-- Debug Mode Toggle -->
-    <div class="absolute bottom-5 left-5 z-[1100] bg-white/80 backdrop-blur-md px-4 py-2 rounded-full shadow-lg flex items-center gap-3 border border-slate-100">
+    <div
+        class="absolute bottom-5 left-5 z-[1100] bg-white/80 backdrop-blur-md px-4 py-2 rounded-full shadow-lg flex items-center gap-3 border border-slate-100">
         <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" id="debug-mode-toggle" class="sr-only peer">
-            <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
+            <div
+                class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500">
+            </div>
         </label>
         <span class="text-xs font-semibold text-slate-700">Modo Prueba (Sin firma)</span>
     </div>
 
 </body>
+
 </html>

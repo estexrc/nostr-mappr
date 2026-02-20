@@ -70,6 +70,32 @@ window.deleteAnchor = (eventId) => {
     UserActions.deleteAnchor(eventId, app.map, app.nostr, store.state.processedEvents);
 };
 
+window.showFullDescription = (eventId) => {
+    if (eventId === 'profile') {
+        const profile = AuthManager.profileCache[AuthManager.userPubkey];
+        if (!profile) return;
+        import('./ui/ui-controller.js').then(ui => {
+            ui.openModal(ui.getDescriptionModalHTML("Sobre mí", profile.about));
+        });
+        return;
+    }
+
+    const marker = app.map.markers.get(eventId);
+    if (!marker) return;
+
+    // Fetch from store
+    const event = Array.from(app.journal.entries).find(e => e.id === eventId) ||
+        { content: "Contenido no disponible en caché", tags: [] };
+
+    const parts = event.content.split('\n\n');
+    const fullTitle = (event.tags.find(t => t[0] === 'title')?.[1] || parts[0] || "Punto de Interés");
+    const fullDesc = parts.slice(1).join('\n\n') || parts[0];
+
+    import('./ui/ui-controller.js').then(ui => {
+        ui.openModal(ui.getDescriptionModalHTML(fullTitle, fullDesc));
+    });
+};
+
 /* --- 4. DIRECT DOM EVENTS (Buttons) --- */
 
 document.getElementById('btn-quick-pop').onclick = async (e) => {

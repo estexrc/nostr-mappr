@@ -1,4 +1,5 @@
 import L from 'leaflet';
+import { AuthManager } from '../../core/auth.js';
 import { CATEGORIAS } from '../../core/categories.js';
 
 export class MapManager {
@@ -133,8 +134,13 @@ export class MapManager {
         ` : `
             <button onclick="window.followUser('${event.pubkey}', '${name}')" class="${followBtn}">Follow</button>
             <button onclick="window.zapUser('${event.pubkey}', '${name}', '${title}')" class="${zapBtn}">⚡ Zap</button>
-            <button onclick="window.deleteAnchor('${event.id}')" class="${deleteBtn} owner-only hidden" data-pubkey="${event.pubkey}">🗑️</button>
+            ${event.pubkey === AuthManager.userPubkey ? `<button onclick="window.deleteAnchor('${event.id}')" class="${deleteBtn}">🗑️ Borrar</button>` : ''}
         `;
+
+        const descriptionTruncationLimit = 120;
+        const truncatedDescription = cleanDescription.length > descriptionTruncationLimit
+            ? `${cleanDescription.substring(0, descriptionTruncationLimit)}... <button onclick="window.showFullDescription('${event.id}')" class="text-indigo-600 font-bold hover:underline">Ver más</button>`
+            : cleanDescription;
 
         return `
             <div class="popup-container min-w-[240px] p-1 font-sans" data-pubkey="${event.pubkey}">
@@ -146,12 +152,17 @@ export class MapManager {
                     </div>
                 </div>
                 <div class="mb-4">
-                    <div class="flex items-center justify-between gap-2 mb-1">
-                        <strong class="text-sm font-black text-slate-800 grow truncate">${title}</strong>
-                        ${catInfo ? `<span class="bg-indigo-50 text-indigo-600 text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-indigo-100">${catInfo.label}</span>` : ''}
+                    <div class="flex flex-col gap-1 mb-2">
+                        <strong class="text-sm font-black text-slate-800">${title}</strong>
+                        ${catInfo ? `<span class="bg-indigo-50 text-indigo-600 text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-indigo-100 self-start">${catInfo.label}</span>` : ''}
                     </div>
                     ${imageHTML}
-                    <p class="text-[12px] text-slate-600 leading-relaxed font-medium mt-1 line-clamp-4">${cleanDescription}</p>
+                    <div class="text-[12px] text-slate-600 leading-relaxed font-medium mt-1">
+                        ${cleanDescription.length > 120
+                ? `${cleanDescription.substring(0, 120)}... <button onclick="window.showFullDescription('${event.id}')" class="text-indigo-600 font-bold hover:underline">Ver más</button>`
+                : cleanDescription
+            }
+                    </div>
                 </div>
                 <div class="flex items-center gap-2 pt-2 border-t border-slate-50">${actionsHTML}</div>
             </div>

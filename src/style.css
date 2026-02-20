@@ -8,6 +8,10 @@
 
 /* --- LEAFLET OVERRIDES --- */
 
+body {
+    overflow-x: hidden;
+}
+
 .leaflet-container {
     background: #f8fafc !important;
 }
