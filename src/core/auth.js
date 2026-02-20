@@ -1,4 +1,5 @@
-import { nip19, nip05 } from 'nostr-tools';
+import * as nip19 from 'nostr-tools/nip19'
+import * as nip05 from 'nostr-tools/nip05'
 
 export const AuthManager = {
     /* Load stored pubkey and profile cache from localStorage on startup. */

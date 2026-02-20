@@ -1,4 +1,5 @@
-import { SimplePool, bytesToHex, hexToBytes } from 'nostr-tools';
+import { SimplePool } from 'nostr-tools/pool'
+import { bytesToHex, hexToBytes } from 'nostr-tools/utils'
 import { AuthManager } from './auth.js';
 import { NostrConnectService } from './nostr-connect-service.js';
 
