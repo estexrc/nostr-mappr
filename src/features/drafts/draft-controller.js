@@ -5,6 +5,8 @@ import { ImageService } from '../../utils/image-service.js';
 export const DraftController = {
     /* Array to store files locally before upload */
     selectedFiles: [],
+    /* Array to store existing image URLs from drafts */
+    existingImages: [],
 
     /* Opens the modal for a new draft (Orange Pin) */
     openDraftModal(lat, lng, mapManager, nostrService, journalManager) {
@@ -28,15 +30,64 @@ export const DraftController = {
     openPublishModal(eventId, lat, lng, mapManager, nostrService, journalManager) {
         if (mapManager && mapManager.map) mapManager.map.closePopup();
 
-        const draftMarker = mapManager.markers.get(eventId);
+        const entry = journalManager.entries.find(e => e.id === eventId);
         openModal(getPublishModalHTML(lat, lng));
 
-        if (draftMarker) {
+        DraftController.existingImages = [];
+
+        if (entry) {
             const titleInput = document.getElementById('pub-title');
+            const descArea = document.getElementById('pub-description');
             const catSelect = document.getElementById('pub-category');
-            if (titleInput) titleInput.value = draftMarker.titulo || "";
-            if (catSelect) catSelect.value = draftMarker.categoria || "gastronomia";
+            const previewContainer = document.getElementById('pub-preview-container');
+
+            const title = entry.tags.find(t => t[0] === 'title')?.[1] || entry.content.split('\n\n')[0] || "";
+
+            // Reconstruct description: if there was a title tag, the content is likely just the description.
+            // If not, it's the part after the first double newline.
+            let description = entry.content;
+            if (!entry.tags.find(t => t[0] === 'title')) {
+                const parts = entry.content.split('\n\n');
+                description = parts.slice(1).join('\n\n') || parts[0];
+            }
+
+            // Clean description from image URLs for the textarea
+            const cleanDescription = description.replace(/https?:\/\/[^\s]+(?:\.jpg|\.jpeg|\.png|\.webp|\.gif|\.bmp)(?:\?[^\s]*)?/gi, '').trim();
+
+            const category = entry.tags.find(t => t[0] === 't' && t[1] !== 'spatial_anchor')?.[1] || "all";
+
+            if (titleInput) titleInput.value = title;
+            if (descArea) descArea.value = cleanDescription;
+            if (catSelect) catSelect.value = category;
+
+            // Handle images
+            const imageUrls = [
+                ...new Set([
+                    ...entry.tags.filter(t => t[0] === 'image' || t[0] === 'imeta').map(t => t[1]),
+                    ...(entry.content.match(/https?:\/\/[^\s]+(?:\.jpg|\.jpeg|\.png|\.webp|\.gif|\.bmp)(?:\?[^\s]*)?/gi) || [])
+                ])
+            ];
+
+            DraftController.existingImages = imageUrls;
+
+            if (previewContainer && imageUrls.length > 0) {
+                imageUrls.forEach(url => {
+                    const div = document.createElement('div');
+                    div.className = "relative aspect-square rounded-xl overflow-hidden border border-slate-200 shadow-sm group";
+                    div.innerHTML = `
+                        <img src="${url}" class="w-full h-full object-cover">
+                        <button class="absolute top-1 right-1 bg-slate-900/50 text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" 
+                                onclick="this.parentElement.remove(); window.removeExistingImage('${url}')">✕</button>
+                    `;
+                    previewContainer.appendChild(div);
+                });
+            }
         }
+
+        // Bridge to allow removing existing images from the global scope (since we use onclick)
+        window.removeExistingImage = (url) => {
+            DraftController.existingImages = DraftController.existingImages.filter(u => u !== url);
+        };
 
         DraftController.initPublishPhotoLogic();
         DraftController.initPublishLogic(eventId, lat, lng, nostrService, journalManager);
@@ -191,6 +242,7 @@ export const DraftController = {
                 if (success) {
                     showToast("¡Ancla publicada con éxito!", "success");
                     DraftController.selectedFiles = [];
+                    DraftController.existingImages = [];
                     if (eventId && journalManager) {
                         await journalManager.deleteEntry(eventId);
                     }
