@@ -60,6 +60,54 @@ export class MapManager {
         this.map.setView([lat, lon], zoom);
     }
 
+    /* Synchronizes the map with the Context VM state (Optimized rendering/diffing) */
+    syncWithVM(state) {
+        const { pins, temporalPin } = state;
+
+        // 1. Handle Network/Journal Pins
+        const currentPinIds = new Set(pins.keys());
+
+        // Remove old pins
+        for (let [id, marker] of this.markers) {
+            if (id !== 'temp-pop' && id !== 'temp-search' && !currentPinIds.has(id)) {
+                this._removeMarker(id);
+            }
+        }
+
+        // Add or update pins
+        for (let [id, pin] of pins) {
+            if (!this.markers.has(id)) {
+                const coordsTag = pin.event?.tags.find(t => t[0] === 'g')?.[1];
+                if (!coordsTag) continue;
+                const [lat, lng] = coordsTag.split(',').map(Number);
+
+                // Fetch profile from cache via VM if possible, or use placeholder
+                const popupHTML = this.createPopupHTMLFromPin(pin);
+                this.addMarker(id, lat, lng, popupHTML, pin.categoryId, pin.type);
+            }
+        }
+
+        // 2. Handle Temporal User Pin (Zero Delay)
+        if (temporalPin) {
+            if (!this.markers.has('temp-pop')) {
+                this.addMarker('temp-pop', temporalPin.lat, temporalPin.lon, temporalPin.popupHTML || '', 'none', 'temp');
+                this.markers.get('temp-pop').openPopup();
+            }
+        } else {
+            this._removeMarker('temp-pop');
+        }
+    }
+
+    _removeMarker(id) {
+        const marker = this.markers.get(id);
+        if (marker) {
+            this.map.removeLayer(marker);
+            this.publicLayer.removeLayer(marker);
+            this.draftLayer.removeLayer(marker);
+            this.markers.delete(id);
+        }
+    }
+
     /* Adds a marker to the map and stores it in the internal registry. */
     addMarker(id, lat, lon, popupHTML, category = 'all', type = 'public') {
         if (this.markers.has(id)) return this.markers.get(id);
@@ -84,7 +132,77 @@ export class MapManager {
         return marker;
     }
 
-    /* Generates popup HTML based on event data and user profile. */
+    /* Generates popup HTML based on pre-processed pin data from VM. */
+    createPopupHTMLFromPin(pin) {
+        const profile = AuthManager.profileCache[pin.pubkey] || null;
+        const name = profile?.display_name || profile?.name || pin.pubkey.substring(0, 8);
+        const picture = profile?.picture || 'https://www.gravatar.com/avatar/0?d=mp';
+
+        let imageHTML = '';
+        if (pin.images.length > 0) {
+            const carouselId = `carousel-${pin.id.substring(0, 8)}`;
+            imageHTML = `
+            <div class="relative my-3 group">
+                <div id="${carouselId}" class="flex overflow-x-auto snap-x snap-mandatory gap-2 no-scrollbar scroll-smooth rounded-2xl border border-slate-100 shadow-inner">
+                    ${pin.images.map(url => `
+                        <div class="flex-none w-full snap-center aspect-video overflow-hidden cursor-zoom-in">
+                            <img src="${url}" class="w-full h-full object-cover" onclick="window.open('${url}', '_blank')">
+                        </div>
+                    `).join('')}
+                </div>
+                ${pin.images.length > 1 ? `
+                    <button onclick="document.getElementById('${carouselId}').scrollBy({left: -240, behavior: 'smooth'})" 
+                        class="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur text-slate-800 rounded-full w-8 h-8 flex items-center justify-center shadow-md hover:bg-white transition-all opacity-0 group-hover:opacity-100">❮</button>
+                    <button onclick="document.getElementById('${carouselId}').scrollBy({left: 240, behavior: 'smooth'})" 
+                        class="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur text-slate-800 rounded-full w-8 h-8 flex items-center justify-center shadow-md hover:bg-white transition-all opacity-0 group-hover:opacity-100">❯</button>
+                ` : ''}
+            </div>`;
+        }
+
+        const catInfo = CATEGORIAS.find(c => c.id === pin.categoryId) || CATEGORIAS.find(c => c.id === 'nostr');
+
+        const btnClass = "flex-1 py-2 px-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 text-center shadow-sm";
+        const followBtn = `${btnClass} bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200`;
+        const zapBtn = `${btnClass} bg-amber-400 text-black hover:bg-amber-500 shadow-amber-200`;
+        const deleteBtn = `${btnClass} bg-rose-500 text-white hover:bg-rose-600 shadow-rose-200`;
+
+        const actionsHTML = pin.isDraft ? `
+            <button onclick="window.completeAnchor('${pin.id}')" class="${followBtn}">🚀 Publicar</button>
+            <button onclick="window.deleteEntry('${pin.id}')" class="${deleteBtn}">🗑️ Borrar</button>
+        ` : `
+            <button onclick="window.followUser('${pin.pubkey}', '${name}')" class="${followBtn}">Follow</button>
+            <button onclick="window.zapUser('${pin.pubkey}', '${name}', '${pin.title}')" class="${zapBtn}">⚡ Zap</button>
+            ${pin.pubkey === AuthManager.userPubkey ? `<button onclick="window.deleteAnchor('${pin.id}')" class="${deleteBtn}">🗑️ Borrar</button>` : ''}
+        `;
+
+        return `
+            <div class="popup-container min-w-[240px] p-1 font-sans" data-pubkey="${pin.pubkey}">
+                <div class="flex items-center gap-3 mb-3 pb-3 border-b border-slate-50">
+                    <img src="${picture}" class="w-10 h-10 rounded-full border-2 border-slate-100 object-cover" alt="${name}">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-black text-slate-900 leading-none">${name}</span>
+                        <span class="text-[10px] font-mono text-slate-400">@${pin.pubkey.substring(0, 8)}</span>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <div class="flex flex-col gap-1 mb-2">
+                        <strong class="text-sm font-black text-slate-800">${pin.title}</strong>
+                        ${catInfo ? `<span class="bg-indigo-50 text-indigo-600 text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-indigo-100 self-start">${catInfo.label}</span>` : ''}
+                    </div>
+                    ${imageHTML}
+                    <div class="text-[12px] text-slate-600 leading-relaxed font-medium mt-1">
+                        ${pin.description.length > 120
+                ? `${pin.description.substring(0, 120)}... <button onclick="window.showFullDescription('${pin.id}')" class="text-indigo-600 font-bold hover:underline">Ver más</button>`
+                : pin.description
+            }
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 pt-2 border-t border-slate-50">${actionsHTML}</div>
+            </div>
+        `;
+    }
+
+    /* Generates popup HTML based on event data and user profile. (LEGACY - keep for stability until fully synced) */
     createPopupHTML(event, profile, categoryId = 'general', isDraft = false) {
         const name = profile?.display_name || profile?.name || event.pubkey.substring(0, 8);
         const picture = profile?.picture || 'https://www.gravatar.com/avatar/0?d=mp';
@@ -225,7 +343,9 @@ export class MapManager {
 
         const tempPoP = this.markers.get('temp-pop');
         if (tempPoP) {
-            this.map.removeLayer(tempPoP);
+            import('../../core/store.js').then(({ store }) => {
+                store.setState({ temporalPin: null });
+            });
             this.markers.delete('temp-pop');
         }
 

@@ -114,16 +114,16 @@ document.getElementById('btn-quick-pop').onclick = async (e) => {
     icon.className = "fas fa-spinner fa-spin";
 
     try {
-        const pos = await app.map.getCurrentLocation();
-        const lat = Number(pos.lat);
-        const lng = Number(pos.lon);
+        // Zero Latency: Use last known location from VM
+        const pos = store.state.currentLocation || await app.map.getCurrentLocation();
+        const lat = Number(pos.lat || pos.latitude);
+        const lng = Number(pos.lon || pos.longitude);
 
         app.map.map.setView([lat, lng], 18);
-        const tempMarker = app.map.addMarker('temp-pop', lat, lng, '', 'none', 'temp');
-
         const isReadOnly = !AuthManager.canSign();
 
-        tempMarker.bindPopup(`
+        // Create instant decision popup
+        const decisionPopupHTML = `
             <div class="pop-decision-container p-2 flex flex-col gap-3 min-w-[180px]">
                 <div class="text-center">
                     <strong class="text-slate-900 font-black block">📍 Ubicación Confirmada</strong>
@@ -142,8 +142,14 @@ document.getElementById('btn-quick-pop').onclick = async (e) => {
                     ` : ''}
                 </div>
                 ${isReadOnly ? '<p class="text-[9px] text-amber-600 font-bold text-center">👁️ Estás en modo solo lectura</p>' : ''}
+                <button onclick="DraftController.clearTemporalPin(); app.map.map.closePopup();" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600">Cancelar</button>
             </div>
-        `, { closeButton: true, offset: [0, -10], closeOnClick: true }).openPopup();
+        `;
+
+        // Update VM to trigger instant marker
+        store.setState({
+            temporalPin: { id: 'temp-pop', lat, lon: lng, type: 'pop', popupHTML: decisionPopupHTML }
+        });
 
     } catch (err) {
         console.error("PoP Error:", err);
@@ -159,9 +165,24 @@ document.getElementById('btn-locate-me').onclick = async (e) => {
     icon.className = "fas fa-spinner fa-spin";
 
     try {
-        const pos = await app.map.getCurrentLocation();
-        app.map.setView(pos.lat, pos.lon, 16);
-        app.map.addMarker('temp-pop', pos.lat, pos.lon, '', 'none', 'temp').bindPopup('📍 You are here').openPopup();
+        // Zero Latency: Use last known location from VM
+        const pos = store.state.currentLocation || await app.map.getCurrentLocation();
+        const lat = Number(pos.lat || pos.latitude);
+        const lng = Number(pos.lon || pos.longitude);
+
+        app.map.setView(lat, lng, 16);
+
+        // Show instant "You are here" (Optional, can be removed if user wants absolute zero pins)
+        store.setState({
+            temporalPin: {
+                id: 'temp-pop',
+                lat,
+                lon: lng,
+                type: 'pop',
+                popupHTML: '<div class="p-2 text-center font-bold text-slate-800">📍 Estás aquí</div>'
+            }
+        });
+
     } catch (err) {
         console.error("Locate error:", err);
     } finally {

@@ -17,6 +17,14 @@ export class AppController {
         this.nostr = new NostrService(this.relays);
         this.journal = new JournalManager(this.map, this.nostr);
 
+        // Subscribir el mapa a los cambios del estado (Reactividad)
+        store.subscribe((state) => {
+            this.map.syncWithVM(state);
+        });
+
+        // Iniciar el seguimiento de ubicación en background
+        store.startLocationWatch();
+
         // Expose to window for legacy onclick (will refactor later)
         window.map = this.map;
     }
@@ -48,20 +56,13 @@ export class AppController {
 
             const profile = await this.nostr.getUserProfile(event.pubkey);
 
-            let lat, lng;
-            if (geoData.isRaw) {
-                lat = geoData.lat;
-                lng = geoData.lon;
-            } else {
-                const decoded = GeoUtils.decode(geoData);
-                lat = decoded.lat;
-                lng = decoded.lon;
-            }
+            // Process via VM to use clean data and buffer
+            const pin = store.processEventToPin(event, profile, false);
+            pin.event = event; // Keep event for coordinate extraction in syncWithVM
 
-            const category = event.tags.find(t => t[0] === 't' && t[1] !== 'spatial_anchor')?.[1] || 'all';
-            const popupHTML = this.map.createPopupHTML(event, profile, category, false);
-
-            this.map.addMarker(event.id, lat, lng, popupHTML, category, 'public');
+            const { pins } = store.state;
+            pins.set(pin.id, pin);
+            store.setState({ pins });
         });
     }
 }

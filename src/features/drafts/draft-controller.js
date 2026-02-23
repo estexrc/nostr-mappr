@@ -1,5 +1,6 @@
 import { openModal, closeModal, getDraftModalHTML, getPublishModalHTML, showToast } from '../../ui/ui-controller.js';
 import { AuthManager } from '../../core/auth.js';
+import { store } from '../../core/store.js';
 import { ImageService } from '../../utils/image-service.js';
 
 export const DraftController = {
@@ -11,8 +12,13 @@ export const DraftController = {
     /* Opens the modal for a new draft (Orange Pin) */
     openDraftModal(lat, lng, mapManager, nostrService, journalManager) {
         if (mapManager && mapManager.map) mapManager.map.closePopup();
-        openModal(getDraftModalHTML(lat, lng));
 
+        // Zero Latency: Set temporal pin in VM
+        store.setState({
+            temporalPin: { id: 'temp-pop', lat, lon: lng, type: 'pop' }
+        });
+
+        openModal(getDraftModalHTML(lat, lng));
         DraftController.initPhotoLogic();
         DraftController.initDraftLogic(lat, lng, nostrService, journalManager);
     },
@@ -91,6 +97,10 @@ export const DraftController = {
 
         DraftController.initPublishPhotoLogic();
         DraftController.initPublishLogic(eventId, lat, lng, nostrService, journalManager);
+    },
+
+    clearTemporalPin() {
+        store.setState({ temporalPin: null });
     },
 
     /* Minimalist logic for file selection with dedicated IDs to avoid conflicts */
@@ -218,6 +228,7 @@ export const DraftController = {
                     if (saved) {
                         showToast("¡Borrador local guardado!", "success");
                         DraftController.selectedFiles = [];
+                        DraftController.clearTemporalPin();
                         closeModal();
                         if (journalManager) journalManager.syncJournal();
                     }
@@ -243,6 +254,7 @@ export const DraftController = {
                     showToast("¡Ancla publicada con éxito!", "success");
                     DraftController.selectedFiles = [];
                     DraftController.existingImages = [];
+                    DraftController.clearTemporalPin();
                     if (eventId && journalManager) {
                         await journalManager.deleteEntry(eventId);
                     }
@@ -287,6 +299,7 @@ export const DraftController = {
                     if (saved) {
                         showToast("Borrador local guardado", "success");
                         DraftController.selectedFiles = [];
+                        DraftController.clearTemporalPin();
                         closeModal();
                         if (journalManager) journalManager.syncJournal();
                     }
@@ -312,6 +325,7 @@ export const DraftController = {
                 if (success) {
                     showToast("Borrador guardado", "success");
                     DraftController.selectedFiles = [];
+                    DraftController.clearTemporalPin();
                     closeModal();
                     if (journalManager) journalManager.syncJournal();
                 }

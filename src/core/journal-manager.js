@@ -1,4 +1,5 @@
 import { AuthManager } from './auth.js';
+import { store } from './store.js';
 import { openModal, closeModal, getJournalModalHTML, getConfirmModalHTML, showToast } from '../ui/ui-controller.js';
 
 /* JournalManager: Handles the logic for the user's personal logbook, managing both public anchors and drafts. */
@@ -45,8 +46,17 @@ export class JournalManager {
             }
 
             this.entries = allEntries.sort((a, b) => b.created_at - a.created_at);
-            this.map.clearDraftLayers();
-            this.entries.forEach(event => this.renderEntry(event));
+
+            // Sync with VM Store instead of direct rendering
+            const { pins } = store.state;
+            this.entries.forEach(event => {
+                const profile = AuthManager.profileCache[event.pubkey] || null;
+                const isDraft = event.kind === 30024 || event.kind === 30078 || event.kind === 'local';
+                const pin = store.processEventToPin(event, profile, isDraft);
+                pin.event = event;
+                pins.set(pin.id, pin);
+            });
+            store.setState({ pins });
 
             // 5. Proactive Sync: If we can sign, try to push local drafts to relay (Kind 30078)
             if (AuthManager.canSign() && localDrafts.length > 0) {
@@ -60,21 +70,9 @@ export class JournalManager {
         }
     }
 
-    /* Renders a single journal entry on the map using the MapManager logic. */
+    /* LEGACY - Removing in favor of VM sync */
     renderEntry(event) {
-        const coordsTag = event.tags.find(t => t[0] === 'g')?.[1];
-        if (!coordsTag) return;
-
-        const [lat, lng] = coordsTag.split(',');
-        const category = event.tags.find(t => t[0] === 't' && t[1] !== 'spatial_anchor')?.[1] || 'all';
-
-        const profile = AuthManager.profileCache[event.pubkey] || null;
-
-        const isDraft = event.kind === 30024 || event.kind === 30078 || event.kind === 'local';
-        const popupHTML = this.map.createPopupHTML(event, profile, category, isDraft);
-
-        const type = isDraft ? 'draft' : 'public';
-        this.map.addMarker(event.id, parseFloat(lat), parseFloat(lng), popupHTML, category, type);
+        // No longer needed
     }
 
     /**
