@@ -89,9 +89,28 @@ export class MapManager {
 
         // 2. Handle Temporal User Pin (Zero Delay)
         if (temporalPin) {
-            if (!this.markers.has('temp-pop')) {
+            const marker = this.markers.get('temp-pop');
+            if (!marker) {
                 this.addMarker('temp-pop', temporalPin.lat, temporalPin.lon, temporalPin.popupHTML || '', 'none', 'temp');
-                this.markers.get('temp-pop').openPopup();
+                const newMarker = this.markers.get('temp-pop');
+                newMarker.openPopup();
+
+                // Sync VM state when user closes popup manually via X
+                newMarker.on('popupclose', () => {
+                    import('../../core/store.js').then(({ store }) => {
+                        store.setState({ temporalPin: null });
+                    });
+                });
+            } else {
+                // Actualizar posición siempre por si se movió el mapa/GPS
+                marker.setLatLng([temporalPin.lat, temporalPin.lon]);
+
+                // Solo actualizar contenido si cambió para evitar parpadeos
+                if (marker.getPopup().getContent() !== temporalPin.popupHTML) {
+                    marker.setPopupContent(temporalPin.popupHTML);
+                    // Re-abrir popup si el contenido es nuevo
+                    if (!marker.isPopupOpen()) marker.openPopup();
+                }
             }
         } else {
             this._removeMarker('temp-pop');
@@ -109,13 +128,14 @@ export class MapManager {
     }
 
     /* Adds a marker to the map and stores it in the internal registry. */
-    addMarker(id, lat, lon, popupHTML, category = 'all', type = 'public') {
+    addMarker(id, lat, lon, popupHTML, category = 'all', type = 'public', options = {}) {
         if (this.markers.has(id)) return this.markers.get(id);
 
         const icon = this._createIcon(type);
         const marker = L.marker([lat, lon], { icon }).bindPopup(popupHTML, {
             maxWidth: 300,
-            className: 'custom-tailwind-popup'
+            className: 'custom-tailwind-popup',
+            ...options
         });
         marker.category = category;
         marker.markerType = type;

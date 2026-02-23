@@ -27,7 +27,7 @@ body {
 }
 
 .custom-tailwind-popup .leaflet-popup-content {
-    margin: 8px !important;
+    margin: 16px 24px 12px 16px !important;
     overflow: hidden;
 }
 

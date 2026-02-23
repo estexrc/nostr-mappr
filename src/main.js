@@ -14,6 +14,19 @@ document.addEventListener('DOMContentLoaded', () => {
     app.init();
 });
 
+window.clearTemporalPin = () => {
+    DraftController.clearTemporalPin();
+    app.map.map.closePopup();
+};
+
+window.openReviewModal = (lat, lng) => {
+    DraftController.openReviewModal(lat, lng, app.map, app.nostr, app.journal);
+};
+
+window.openDraftModal = (lat, lng) => {
+    DraftController.openDraftModal(lat, lng, app.map, app.nostr, app.journal);
+};
+
 /* --- 3. GLOBAL INTERFACE BRIDGES (Legacy Compatibility) --- */
 
 window.centerMapAndOpenPopup = (eventId, lat, lng) => {
@@ -142,7 +155,7 @@ document.getElementById('btn-quick-pop').onclick = async (e) => {
                     ` : ''}
                 </div>
                 ${isReadOnly ? '<p class="text-[9px] text-amber-600 font-bold text-center">👁️ Estás en modo solo lectura</p>' : ''}
-                <button onclick="DraftController.clearTemporalPin(); app.map.map.closePopup();" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600">Cancelar</button>
+                <button onclick="window.clearTemporalPin()" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 mt-1">Cancelar</button>
             </div>
         `;
 
@@ -179,7 +192,11 @@ document.getElementById('btn-locate-me').onclick = async (e) => {
                 lat,
                 lon: lng,
                 type: 'pop',
-                popupHTML: '<div class="p-2 text-center font-bold text-slate-800">📍 Estás aquí</div>'
+                popupHTML: `
+                    <div class="p-2 text-center">
+                        <div class="font-bold text-slate-800">📍 Estás aquí</div>
+                    </div>
+                `
             }
         });
 
