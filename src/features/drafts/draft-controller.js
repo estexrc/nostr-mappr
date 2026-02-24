@@ -179,7 +179,7 @@ export const DraftController = {
             const newDraft = {
                 id: `local_${Date.now()}`,
                 kind: 'local',
-                content: `${title}\n\n${desc}`,
+                content: `${title}\n\n${desc}${imageUrls.length > 0 ? '\n\n' + imageUrls.join('\n') : ''}`,
                 tags: [
                     ["t", "spatial_anchor"],
                     ["t", cat],
@@ -235,9 +235,11 @@ export const DraftController = {
                     return;
                 }
 
+                const allImageUrls = [...DraftController.existingImages, ...imageUrls];
+
                 const publicEvent = {
                     kind: 1,
-                    content: `${title}\n\n${desc}`,
+                    content: `${title}\n\n${desc}${allImageUrls.length > 0 ? '\n\n' + allImageUrls.join('\n') : ''}`,
                     tags: [
                         ["t", "spatial_anchor"],
                         ["t", cat],
@@ -247,7 +249,7 @@ export const DraftController = {
                     created_at: Math.floor(Date.now() / 1000)
                 };
 
-                imageUrls.forEach(url => publicEvent.tags.push(["image", url]));
+                allImageUrls.forEach(url => publicEvent.tags.push(["image", url]));
 
                 const success = await nostrService.publishEvent(publicEvent);
                 if (success) {
@@ -308,7 +310,7 @@ export const DraftController = {
 
                 const draftEvent = {
                     kind: 30024,
-                    content: `Draft: ${title}`,
+                    content: ``,
                     tags: [
                         ["d", `draft_${Date.now()}`],
                         ["title", title],

@@ -51,7 +51,19 @@ class ViewModel {
         const parts = event.content.split('\n\n');
 
         const title = titleTag || (isDraft ? "Borrador" : parts[0]) || "Punto de Interés";
-        const rawDescription = titleTag ? event.content : (parts.slice(1).join('\n\n') || parts[0] || "");
+
+        let rawDescription = "";
+        if (titleTag) {
+            rawDescription = event.content;
+        } else {
+            // If the first part is exactly the title, use the rest. 
+            // Otherwise use everything (fallback to previous logic).
+            if (parts[0] === title && parts.length > 1) {
+                rawDescription = parts.slice(1).join('\n\n');
+            } else {
+                rawDescription = parts.join('\n\n') || "";
+            }
+        }
 
         return {
             id: event.id,

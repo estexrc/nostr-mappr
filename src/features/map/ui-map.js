@@ -210,12 +210,13 @@ export class MapManager {
                         ${catInfo ? `<span class="bg-indigo-50 text-indigo-600 text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-indigo-100 self-start">${catInfo.label}</span>` : ''}
                     </div>
                     ${imageHTML}
+                    ${!pin.isDraft ? `
                     <div class="text-[12px] text-slate-600 leading-relaxed font-medium mt-1">
                         ${pin.description.length > 120
                 ? `${pin.description.substring(0, 120)}... <button onclick="window.showFullDescription('${pin.id}')" class="text-indigo-600 font-bold hover:underline">Ver más</button>`
                 : pin.description
             }
-                    </div>
+                    </div>` : ''}
                 </div>
                 <div class="flex items-center gap-2 pt-2 border-t border-slate-50">${actionsHTML}</div>
             </div>
@@ -295,12 +296,13 @@ export class MapManager {
                         ${catInfo ? `<span class="bg-indigo-50 text-indigo-600 text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-indigo-100 self-start">${catInfo.label}</span>` : ''}
                     </div>
                     ${imageHTML}
+                    ${!isDraft ? `
                     <div class="text-[12px] text-slate-600 leading-relaxed font-medium mt-1">
                         ${cleanDescription.length > 120
                 ? `${cleanDescription.substring(0, 120)}... <button onclick="window.showFullDescription('${event.id}')" class="text-indigo-600 font-bold hover:underline">Ver más</button>`
                 : cleanDescription
             }
-                    </div>
+                    </div>` : ''}
                 </div>
                 <div class="flex items-center gap-2 pt-2 border-t border-slate-50">${actionsHTML}</div>
             </div>
