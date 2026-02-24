@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mappr Admin HQ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                    colors: {
+                        brand: { DEFAULT: '#6366f1', dark: '#4f46e5', glow: 'rgba(99,102,241,0.3)' }
+                    },
+                    boxShadow: {
+                        'neon': '0 0 15px -3px rgba(99,102,241,0.4), 0 0 30px -10px rgba(99,102,241,0.2)',
+                        'neon-sm': '0 0 8px -2px rgba(99,102,241,0.35)',
+                    },
+                    backdropBlur: { 'xl': '20px' },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0', transform: 'translateY(8px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        pulse_neon: { '0%,100%': { boxShadow: '0 0 10px -3px rgba(99,102,241,0.4)' }, '50%': { boxShadow: '0 0 20px -3px rgba(99,102,241,0.7)' } },
+                        spin_slow: { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.35s ease-out forwards',
+                        'neon-pulse': 'pulse_neon 2.5s ease-in-out infinite',
+                        'spin-slow': 'spin_slow 3s linear infinite'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root { color-scheme: dark; }
+        body { background: #020617; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255,255,255,0.04); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
+        .glass-hover:hover { background: rgba(255,255,255,0.07); border-color: rgba(99,102,241,0.3); }
+        .neon-border { border: 1px solid rgba(99,102,241,0.4); box-shadow: 0 0 15px -3px rgba(99,102,241,0.3); }
+        .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; color: #64748b; font-weight: 600; font-size: 13px; transition: all 0.2s; cursor: pointer; }
+        .sidebar-link:hover, .sidebar-link.active { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+        .sidebar-link.active { box-shadow: 0 0 12px -4px rgba(99,102,241,0.5); }
+        .input-glass { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #e2e8f0; padding: 10px 14px; font-size: 13px; width: 100%; outline: none; transition: all 0.2s; }
+        .input-glass:focus { border-color: rgba(99,102,241,0.6); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+        .input-glass::placeholder { color: #475569; }
+        .btn-primary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; transition: all 0.2s; border: none; cursor: pointer; letter-spacing: 0.03em; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 20px -3px rgba(99,102,241,0.6); }
+        .btn-primary:active { transform: scale(0.97); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-ghost { background: rgba(255,255,255,0.05); color: #94a3b8; padding: 8px 16px; border-radius: 10px; font-weight: 600; font-size: 12px; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.08); cursor: pointer; }
+        .btn-ghost:hover { background: rgba(255,255,255,0.1); color: #cbd5e1; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .status-success { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.6); }
+        .status-pending { background: #f59e0b; box-shadow: 0 0 6px rgba(245,158,11,0.6); animation: pulse_neon 1.5s ease-in-out infinite; }
+        .status-error { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,0.6); }
+        .section { display: none; } .section.active { display: block; animation: fadeIn 0.3s ease-out; }
+        .mesh-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; background: radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.06) 0%, transparent 50%); }
+        select.input-glass option { background: #0f172a; color: #e2e8f0; }
+        table { border-collapse: separate; border-spacing: 0 4px; }
+        tbody tr { background: rgba(255,255,255,0.03); border-radius: 10px; transition: background 0.2s; }
+        tbody tr:hover { background: rgba(99,102,241,0.08); }
+        td, th { padding: 12px 16px; }
+        .toast { position: fixed; bottom: 24px; right: 24px; z-index: 9999; padding: 12px 20px; border-radius: 14px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; animation: fadeIn 0.3s ease-out; }
+        .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 10px; }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100">
+    <div class="mesh-bg"></div>
+
+    <!-- AUTH GATE -->
+    <div id="auth-gate" class="fixed inset-0 flex flex-col items-center justify-center z-50 p-6" style="background:#020617">
+        <div class="glass rounded-3xl p-10 max-w-sm w-full text-center neon-border">
+            <div class="text-5xl mb-4">🗺️</div>
+            <h1 class="text-2xl font-black text-white mb-1">Mappr Admin HQ</h1>
+            <p class="text-slate-500 text-sm mb-8">Acceso restringido al administrador</p>
+            <button id="btn-auth-login" class="btn-primary w-full text-sm py-3">
+                <i class="fas fa-key mr-2"></i>Conectar con extensión Nostr
+            </button>
+            <p id="auth-error" class="text-red-400 text-xs mt-4 hidden"></p>
+        </div>
+    </div>
+
+    <!-- UNAUTHORIZED -->
+    <div id="unauthorized-gate" class="fixed inset-0 flex flex-col items-center justify-center z-50 p-6 hidden" style="background:#020617">
+        <div class="glass rounded-3xl p-10 max-w-sm w-full text-center">
+            <div class="text-5xl mb-4">🚫</div>
+            <h1 class="text-xl font-black text-white mb-2">Acceso denegado</h1>
+            <p class="text-slate-500 text-sm mb-6">Tu pubkey no tiene privilegios de administrador.</p>
+            <button onclick="location.href='/'" class="btn-ghost w-full">← Volver al mapa</button>
+        </div>
+    </div>
+
+    <!-- MAIN APP (hidden until auth) -->
+    <div id="main-app" class="hidden min-h-screen flex">
+        <!-- SIDEBAR -->
+        <aside class="w-56 min-h-screen glass border-r border-white/5 flex flex-col py-6 px-3 relative z-10 flex-shrink-0">
+            <div class="px-3 mb-8">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🗺️</span>
+                    <div>
+                        <div class="text-sm font-black text-white">Mappr Admin</div>
+                        <div class="text-[10px] text-slate-500 font-mono" id="sidebar-pubkey">@...</div>
+                    </div>
+                </div>
+            </div>
+            <nav class="flex flex-col gap-1">
+                <div class="sidebar-link active" onclick="showSection('dashboard')">
+                    <span class="material-symbols-rounded text-lg" style="font-variation-settings:'FILL' 1">dashboard</span>
+                    <span>Dashboard</span>
+                </div>
+                <div class="sidebar-link" onclick="showSection('badges')">
+                    <span class="material-symbols-rounded text-lg" style="font-variation-settings:'FILL' 1">workspace_premium</span>
+                    <span>Crear Medalla</span>
+                </div>
+                <div class="sidebar-link" onclick="showSection('users')">
+                    <span class="material-symbols-rounded text-lg" style="font-variation-settings:'FILL' 1">group</span>
+                    <span>Usuarios</span>
+                </div>
+                <div class="sidebar-link" onclick="showSection('rules')">
+                    <span class="material-symbols-rounded text-lg" style="font-variation-settings:'FILL' 1">stars</span>
+                    <span>Reglas de Juego</span>
+                </div>
+            </nav>
+            <div class="mt-auto">
+                <button onclick="location.href='/'" class="sidebar-link w-full text-left">
+                    <span class="material-symbols-rounded text-lg">arrow_back</span>
+                    <span>Volver al mapa</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-1 overflow-y-auto scrollbar-thin relative z-10 p-8">
+
+            <!-- DASHBOARD -->
+            <section id="section-dashboard" class="section active">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-black text-white">Dashboard</h2>
+                    <p class="text-slate-500 text-sm mt-1">Resumen de métricas y actividad de Mappr.</p>
+                </div>
+                <div class="grid grid-cols-3 gap-5 mb-8">
+                    <div class="glass rounded-2xl p-6 neon-border">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-slate-400 text-xs font-semibold uppercase tracking-widest">Anclas publicadas</span>
+                            <span class="material-symbols-rounded text-brand text-xl" style="font-variation-settings:'FILL' 1">location_on</span>
+                        </div>
+                        <div class="text-3xl font-black text-white" id="stat-pins">—</div>
+                    </div>
+                    <div class="glass rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-slate-400 text-xs font-semibold uppercase tracking-widest">Medallas emitidas</span>
+                            <span class="material-symbols-rounded text-amber-400 text-xl" style="font-variation-settings:'FILL' 1">workspace_premium</span>
+                        </div>
+                        <div class="text-3xl font-black text-white" id="stat-badges">—</div>
+                    </div>
+                    <div class="glass rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-slate-400 text-xs font-semibold uppercase tracking-widest">Red de relays</span>
+                            <span class="material-symbols-rounded text-green-400 text-xl" style="font-variation-settings:'FILL' 1">cell_tower</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="status-dot status-success"></span>
+                            <span class="text-sm font-bold text-white">3 relays activos</span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 mt-1">nos.lol · damus.io · snort.social</div>
+                    </div>
+                </div>
+                <div id="event-log" class="glass rounded-2xl p-6">
+                    <h3 class="text-sm font-bold text-slate-300 mb-4">Registro de eventos recientes</h3>
+                    <div class="space-y-3 text-sm text-slate-400" id="event-log-list">
+                        <div class="text-xs text-slate-600">Cargando actividad…</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CREATE BADGE -->
+            <section id="section-badges" class="section">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-black text-white">Crear Medalla</h2>
+                    <p class="text-slate-500 text-sm mt-1">Publica una Badge Definition (Kind 30009) en Nostr.</p>
+                </div>
+                <div class="grid grid-cols-2 gap-8">
+                    <!-- FORM -->
+                    <div class="glass rounded-2xl p-7 space-y-5">
+                        <div>
+                            <label class="text-xs font-semibold text-slate-400 uppercase tracking-widest block mb-2">Nombre de la medalla *</label>
+                            <input id="badge-name" type="text" placeholder="Ej: Explorador Genesis" class="input-glass">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-slate-400 uppercase tracking-widest block mb-2">Tag único (d) *</label>
+                            <input id="badge-d" type="text" placeholder="Ej: explorador-genesis" class="input-glass font-mono">
+                            <p class="text-[11px] text-slate-600 mt-1">Identificador único, sin espacios ni mayúsculas.</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-slate-400 uppercase tracking-widest block mb-2">Descripción</label>
+                            <textarea id="badge-description" rows="3" placeholder="Descripción de la medalla..." class="input-glass resize-none"></textarea>
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-slate-400 uppercase tracking-widest block mb-2">Imagen (nostr.build)</label>
+                            <div class="flex gap-2">
+                                <input id="badge-image-url" type="text" placeholder="URL de la imagen (o sube abajo)" class="input-glass flex-1">
+                            </div>
+                            <div class="mt-2 flex items-center gap-2">
+                                <input id="badge-image-file" type="file" accept="image/*" class="hidden">
+                                <button onclick="document.getElementById('badge-image-file').click()" class="btn-ghost text-xs">
+                                    <i class="fas fa-upload mr-1"></i>Subir imagen
+                                </button>
+                                <span id="badge-upload-status" class="text-xs text-slate-500"></span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-slate-400 uppercase tracking-widest block mb-2">Thumbnail (miniatura)</label>
+                            <input id="badge-thumb-url" type="text" placeholder="URL del thumbnail" class="input-glass">
+                        </div>
+                        <div id="badge-tx-status" class="hidden rounded-xl p-3 text-sm font-semibold flex items-center gap-2"></div>
+                        <button id="btn-publish-badge" class="btn-primary w-full">
+                            <i class="fas fa-bolt mr-2"></i>Publicar medalla en Nostr
+                        </button>
+                    </div>
+                    <!-- PREVIEW CARD -->
+                    <div class="flex flex-col gap-5">
+                        <div class="glass rounded-2xl p-7 neon-border animate-neon-pulse flex-1 flex flex-col items-center justify-center text-center gap-4">
+                            <div id="badge-preview-img-wrapper" class="w-28 h-28 rounded-full bg-white/5 border-2 border-brand/30 flex items-center justify-center overflow-hidden">
+                                <span class="material-symbols-rounded text-4xl text-slate-600" style="font-variation-settings:'FILL' 1">workspace_premium</span>
+                            </div>
+                            <div>
+                                <div id="badge-preview-name" class="text-lg font-black text-white">Nombre de la medalla</div>
+                                <div id="badge-preview-d" class="text-[11px] font-mono text-slate-500">@d-tag</div>
+                            </div>
+                            <div id="badge-preview-desc" class="text-xs text-slate-400 max-w-[200px] leading-relaxed">La descripción aparecerá aquí.</div>
+                            <div class="glass rounded-xl px-4 py-2 text-[10px] font-bold text-brand uppercase tracking-widest">NIP-58 · Kind 30009</div>
+                        </div>
+                        <div class="glass rounded-2xl p-5">
+                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Relays de propagación</h3>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between items-center"><span class="text-slate-300 font-mono">nos.lol</span><span class="status-dot status-success"></span></div>
+                                <div class="flex justify-between items-center"><span class="text-slate-300 font-mono">relay.damus.io</span><span class="status-dot status-success"></span></div>
+                                <div class="flex justify-between items-center"><span class="text-slate-300 font-mono">relay.snort.social</span><span class="status-dot status-success"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- USER MANAGEMENT -->
+            <section id="section-users" class="section">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-2xl font-black text-white">Gestión de Usuarios</h2>
+                        <p class="text-slate-500 text-sm mt-1">Candidatos a medallas basados en actividad en Mappr.</p>
+                    </div>
+                    <button id="btn-load-users" class="btn-primary text-xs">
+                        <i class="fas fa-sync mr-2"></i>Cargar usuarios activos
+                    </button>
+                </div>
+
+                <!-- Award Modal (inline) -->
+                <div id="award-panel" class="hidden glass neon-border rounded-2xl p-6 mb-6 animate-fade-in">
+                    <h3 class="text-sm font-bold text-white mb-4">Otorgar medalla (Kind 8)</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">Recipient npub/hex *</label>
+                            <input id="award-recipient" type="text" placeholder="npub1... o hex" class="input-glass font-mono text-xs">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">Badge Definition (d-tag) *</label>
+                            <input id="award-badge-d" type="text" placeholder="Ej: explorador-genesis" class="input-glass font-mono text-xs">
+                        </div>
+                    </div>
+                    <div id="award-tx-status" class="hidden rounded-xl p-3 text-sm font-semibold flex items-center gap-2 mt-3"></div>
+                    <div class="flex gap-3 mt-4">
+                        <button id="btn-award-badge" class="btn-primary text-xs"><i class="fas fa-award mr-2"></i>Publicar Kind 8</button>
+                        <button onclick="document.getElementById('award-panel').classList.add('hidden')" class="btn-ghost text-xs">Cancelar</button>
+                    </div>
+                </div>
+
+                <div class="glass rounded-2xl overflow-hidden">
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th class="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest px-4 py-4">Usuario</th>
+                                <th class="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest px-4 py-4">Pubkey</th>
+                                <th class="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest px-4 py-4">Anclas</th>
+                                <th class="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest px-4 py-4">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <tr><td colspan="4" class="text-center text-slate-600 text-sm py-10">Haz clic en "Cargar usuarios activos" para comenzar.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- GAME RULES -->
+            <section id="section-rules" class="section">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-2xl font-black text-white">Reglas de Juego</h2>
+                        <p class="text-slate-500 text-sm mt-1">Configuración guardada en Kind 30078.</p>
+                    </div>
+                    <div id="rules-sync-status" class="flex items-center gap-2 text-xs text-slate-500"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="glass rounded-2xl p-7 space-y-5">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <span class="material-symbols-rounded text-brand text-base" style="font-variation-settings:'FILL' 1">stars</span>
+                            Sistema de Puntos
+                        </h3>
+                        <div>
+                            <label class="text-xs font-semibold text-slate-400 block mb-2">Puntos por ancla publicada</label>
+                            <input id="rule-points-pin" type="number" min="0" value="10" class="input-glass">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-slate-400 block mb-2">Límite diario de puntos</label>
+                            <input id="rule-daily-cap" type="number" min="0" value="100" class="input-glass">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-slate-400 block mb-2">Bonus por racha (días consecutivos)</label>
+                            <input id="rule-streak-bonus" type="number" min="0" value="5" class="input-glass">
+                        </div>
+                    </div>
+                    <div class="glass rounded-2xl p-7 space-y-5">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <span class="material-symbols-rounded text-amber-400 text-base" style="font-variation-settings:'FILL' 1">trending_up</span>
+                            Niveles del sistema
+                        </h3>
+                        <div>
+                            <label class="text-xs font-semibold text-slate-400 block mb-2">Puntos para nivel Bronce</label>
+                            <input id="rule-level-bronze" type="number" value="100" class="input-glass">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-slate-400 block mb-2">Puntos para nivel Plata</label>
+                            <input id="rule-level-silver" type="number" value="500" class="input-glass">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-slate-400 block mb-2">Puntos para nivel Oro</label>
+                            <input id="rule-level-gold" type="number" value="2000" class="input-glass">
+                        </div>
+                    </div>
+                    <div class="col-span-2">
+                        <div id="rules-tx-status" class="hidden rounded-xl p-3 text-sm font-semibold flex items-center gap-2 mb-4"></div>
+                        <button id="btn-save-rules" class="btn-primary">
+                            <i class="fas fa-save mr-2"></i>Guardar configuración en Nostr (Kind 30078)
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script type="module" src="/src/features/admin/admin-controller.js"></script>
+</body>
+</html>

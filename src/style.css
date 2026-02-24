@@ -1,9 +1,23 @@
 @import "tailwindcss";
 
 @theme {
+    /* Brand */
+    --color-brand: #6366f1;
+    --color-brand-dark: #4f46e5;
     --color-indigo-500: #6366f1;
     --color-indigo-600: #4f46e5;
+
+    /* Typography */
     --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+    /* Dark Glass Surface tokens */
+    --glass-bg: rgba(255, 255, 255, 0.04);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-neon: rgba(99, 102, 241, 0.3);
+
+    /* Neon shadows */
+    --shadow-neon: 0 0 15px -3px rgba(99, 102, 241, 0.4), 0 0 30px -10px rgba(99, 102, 241, 0.2);
+    --shadow-neon-sm: 0 0 8px -2px rgba(99, 102, 241, 0.35);
 }
 
 /* --- LEAFLET OVERRIDES --- */
