@@ -17,6 +17,13 @@ export class MapManager {
         }).addTo(this.map);
 
         L.control.zoom({ position: 'bottomright' }).addTo(this.map);
+
+        // Permanent listener: clicking anywhere on the map clears any active temp pin
+        this.map.on('click', () => {
+            if (store.state.temporalPin) {
+                store.setState({ temporalPin: null });
+            }
+        });
     }
 
     /* Centralized icon generator. */
@@ -93,26 +100,19 @@ export class MapManager {
 
         // 2. Handle Temporal User Pin (Zero Delay)
         if (temporalPin) {
-            const marker = this.markers.get('temp-pop');
-            if (!marker) {
+            const existingMarker = this.markers.get('temp-pop');
+            if (!existingMarker) {
+                // Create marker only if it doesn't exist yet
                 this.addMarker('temp-pop', temporalPin.lat, temporalPin.lon, temporalPin.popupHTML || '', 'none', 'temp');
                 const newMarker = this.markers.get('temp-pop');
-                newMarker.openPopup();
 
-                // Sync VM state when user closes popup manually via X
-                newMarker.on('popupclose', () => {
-                    store.setState({ temporalPin: null });
-                });
-            } else {
-                // Actualizar posición siempre por si se movió el mapa/GPS
-                marker.setLatLng([temporalPin.lat, temporalPin.lon]);
-
-                // Solo actualizar contenido si cambió para evitar parpadeos
-                if (marker.getPopup().getContent() !== temporalPin.popupHTML) {
-                    marker.setPopupContent(temporalPin.popupHTML);
-                    // Re-abrir popup si el contenido es nuevo
-                    if (!marker.isPopupOpen()) marker.openPopup();
+                // Only open popup if there's content
+                if (temporalPin.popupHTML && temporalPin.popupHTML.trim() !== '') {
+                    newMarker.openPopup();
                 }
+            } else {
+                // Reuse existing marker — just update position
+                existingMarker.setLatLng([temporalPin.lat, temporalPin.lon]);
             }
         } else {
             this._removeMarker('temp-pop');
@@ -134,11 +134,16 @@ export class MapManager {
         if (this.markers.has(id)) return this.markers.get(id);
 
         const icon = this._createIcon(type);
-        const marker = L.marker([lat, lon], { icon }).bindPopup(popupHTML, {
-            maxWidth: 320,
-            className: 'custom-tailwind-popup',
-            ...options
-        });
+        const marker = L.marker([lat, lon], { icon });
+
+        // Only bind popup when there's content
+        if (popupHTML && popupHTML.trim() !== '') {
+            marker.bindPopup(popupHTML, {
+                maxWidth: 320,
+                className: 'custom-tailwind-popup',
+                ...options
+            });
+        }
 
         // Asegurar limpieza de temporalPin al cerrar el popup
         if (id === 'temp-pop') {
@@ -240,10 +245,10 @@ export class MapManager {
                         <span class="text-[10px] font-mono text-slate-400 truncate">@${pin.pubkey.substring(0, 10)}...</span>
                     </div>
                 </div>
-                <div class="space-y-2">
+                <div class="space-y-3">
                     <div class="flex flex-col gap-1.5">
                         <h3 class="text-[14px] font-heading text-slate-800 leading-tight">${pin.title}</h3>
-                        ${catInfo ? `<span class="bg-indigo-50 text-brand text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-indigo-100 self-start animate-neon-pulse">${catInfo.label}</span>` : ''}
+                        ${catInfo ? `<span class="bg-indigo-50 text-brand text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-indigo-100 self-start ${catInfo.group.includes('Nostr') ? 'neon-pulse-nostr' : ''}">${catInfo.label}</span>` : ''}
                     </div>
                     ${imageHTML}
                     ${!pin.isDraft ? `

@@ -193,21 +193,17 @@ document.getElementById('btn-locate-me').onclick = async (e) => {
 
         app.map.setView(lat, lng, 16);
 
-        // Show instant "You are here" (Optional, can be removed if user wants absolute zero pins)
+        // Always clear previous temp pin first to guarantee single marker
+        store.setState({ temporalPin: null });
+
+        // Set new location marker (no popup, pin only)
         store.setState({
             temporalPin: {
                 id: 'temp-pop',
                 lat,
                 lon: lng,
                 type: 'pop',
-                popupHTML: `
-                    <div class="popup-minimal text-center">
-                        <div class="font-bold text-slate-800 flex items-center gap-1 justify-center">
-                            <span class="text-[12px]">📍</span>
-                            <span class="text-[12px]">Estás aquí</span>
-                        </div>
-                    </div>
-                `
+                popupHTML: '' // Empty means no popup
             }
         });
 

@@ -21,6 +21,11 @@
     --shadow-neon: 0 0 15px -3px rgba(99, 102, 241, 0.4), 0 0 30px -10px rgba(99, 102, 241, 0.2);
     --shadow-neon-sm: 0 0 8px -2px rgba(99, 102, 241, 0.35);
 
+    /* Custom Color Scale */
+    --color-slate-100: #f1f5f9;
+    --color-slate-500: #64748b;
+    --color-slate-800: #1e293b;
+
     /* Animations */
     @keyframes fadeSlide {
         from {
@@ -89,6 +94,68 @@ body::before {
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.4);
     box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03), 0 0 0 0.5px rgba(255, 255, 255, 0.8) inset;
+    border-radius: 1.5rem;
+    /* Standard rounded-3xl approx */
+}
+
+/* Category Differentiation */
+.neon-pulse-nostr {
+    animation: neonPulse 2.5s ease-in-out infinite;
+    border-color: rgba(99, 102, 241, 0.5) !important;
+}
+
+/* Typography Overrides */
+.font-heading {
+    font-weight: 900 !important;
+    letter-spacing: -0.02em !important;
+}
+
+.font-label {
+    text-transform: uppercase !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em !important;
+}
+
+/* UX Feedback elements */
+.spinner-micro {
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.map-feedback-toast {
+    position: absolute;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1200;
+    padding: 10px 20px;
+    background: white;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border-radius: 99px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+    pointer-events: none;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.map-feedback-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(20px);
 }
 
 /* --- LEAFLET OVERRIDES --- */
