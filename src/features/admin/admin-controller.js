@@ -4,14 +4,7 @@ import { GamificationService } from './gamification-service.js';
 import { UserSearchService } from './user-search-service.js';
 
 /* ─── Navigation ─────────────────────────────────────────── */
-window.showSection = (id) => {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-    document.getElementById(`section-${id}`)?.classList.add('active');
-    document.querySelectorAll('.sidebar-link').forEach(l => {
-        if (l.getAttribute('onclick')?.includes(id)) l.classList.add('active');
-    });
-};
+
 
 /* ─── Toast ──────────────────────────────────────────────── */
 window.showAdminToast = (message, type = 'info') => {
@@ -79,6 +72,66 @@ function initModules(pubkey) {
 }
 
 async function loadDashboardStats() {
-    // Load saved rules from Kind 30078
+    // 1. Load saved rules from Kind 30078
     await GamificationService.loadRules();
+
+    // 2. Start Live Activity Feed
+    startLiveActivityFeed();
+}
+
+function startLiveActivityFeed() {
+    const list = document.getElementById('event-log-list');
+    if (!list) return;
+
+    // Use a public relay for live activity
+    const ws = new WebSocket('wss://nos.lol');
+
+    ws.onopen = () => {
+        // Subscribe to global notes (Kind 1) just to show "live" activity
+        // In a real app, we might filter for app-specific tags
+        ws.send(JSON.stringify(['REQ', 'live-feed', { kinds: [1], limit: 0 }]));
+    };
+
+    ws.onmessage = (msg) => {
+        try {
+            const data = JSON.parse(msg.data);
+            if (data[0] === 'EVENT') {
+                const event = data[2];
+                const item = document.createElement('div');
+                item.className = 'flex gap-4 group cursor-default animate-fade-slide';
+
+                // Truncate message
+                const text = event.content.length > 60 ? event.content.substring(0, 57) + '...' : event.content;
+                const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                item.innerHTML = `
+                    <div class="flex flex-col items-center">
+                        <div class="w-2 h-2 rounded-full bg-indigo-500 mt-1.5 shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
+                        <div class="flex-1 w-0.5 bg-slate-200 my-1"></div>
+                    </div>
+                    <div class="flex-1 pb-1">
+                        <div class="flex items-center justify-between mb-0.5">
+                            <span class="text-[13px] font-bold text-slate-800 line-clamp-1">${text}</span>
+                            <span class="text-[10px] font-medium text-slate-400">${time}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="material-symbols-rounded text-[12px] text-indigo-400" style="font-variation-settings:'FILL' 1">chat_bubble</span>
+                            <span class="text-[11px] text-slate-500 font-mono">${event.pubkey.substring(0, 8)}</span>
+                        </div>
+                    </div>
+                `;
+
+                if (list.querySelector('div[style*="text-align:center"]')) {
+                    list.innerHTML = '';
+                }
+
+                list.prepend(item);
+
+                // Keep only last 20 items
+                if (list.children.length > 20) {
+                    list.removeChild(list.lastChild);
+                }
+            }
+        } catch { }
+    };
 }

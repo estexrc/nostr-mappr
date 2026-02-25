@@ -50,23 +50,65 @@ export const UserSearchService = {
                 return;
             }
 
-            tbody.innerHTML = sorted.map(([pk, count]) => `
-                <tr>
+            // Fetch real profiles for these users
+            const pks = sorted.map(s => s[0]);
+            await Promise.all(SEARCH_RELAYS.map(url => new Promise((resolve) => {
+                const ws = new WebSocket(url);
+                ws.onopen = () => {
+                    ws.send(JSON.stringify(['REQ', 'profiles', { kinds: [0], authors: pks }]));
+                };
+                ws.onmessage = (msg) => {
+                    try {
+                        const data = JSON.parse(msg.data);
+                        if (data[0] === 'EVENT') {
+                            const event = data[2];
+                            const profile = JSON.parse(event.content);
+                            userProfiles.set(event.pubkey, profile);
+                        }
+                        if (data[0] === 'EOSE') { ws.close(); resolve(); }
+                    } catch { }
+                };
+                ws.onerror = resolve;
+                setTimeout(() => { ws.close(); resolve(); }, 4000);
+            })));
+
+            tbody.innerHTML = sorted.map(([pk, count]) => {
+                const profile = userProfiles.get(pk) || {};
+                const name = profile.display_name || profile.name || `Usuario ${pk.substring(0, 4)}`;
+                const pic = profile.picture || `https://robohash.org/${pk.substring(0, 8)}?set=set4`;
+
+                return `
+                <tr class="group border-b border-transparent hover:border-slate-200">
                     <td>
                         <div class="flex items-center gap-3">
-                            <img src="https://www.gravatar.com/avatar/${pk.substring(0, 8)}?d=mp" class="w-8 h-8 rounded-full border border-white/10">
-                            <span class="text-xs font-semibold text-slate-300" id="name-${pk.substring(0, 8)}">@${pk.substring(0, 8)}…</span>
+                            <div class="w-8 h-8 rounded-full border border-slate-200 overflow-hidden bg-slate-100">
+                                <img src="${pic}" class="w-full h-full object-cover" onerror="this.src='https://robohash.org/${pk.substring(0, 8)}?set=set4'">
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[13px] font-bold text-slate-800" id="name-${pk.substring(0, 8)}">${name}</span>
+                                <span class="text-[10px] text-slate-500 font-medium">${profile.nip05 || 'Activo recientemente'}</span>
+                            </div>
                         </div>
                     </td>
-                    <td><span class="font-mono text-[10px] text-slate-500">${pk.substring(0, 16)}…</span></td>
-                    <td><span class="text-sm font-bold text-brand">${count}</span></td>
                     <td>
-                        <button class="btn-ghost text-[11px]" onclick="grantBadgeTo('${pk}')">
-                            <i class="fas fa-award mr-1 text-amber-400"></i>Otorgar medalla
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono text-[10px] text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">${pk.substring(0, 16)}…</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="flex items-center gap-1.5">
+                            <div style="padding:2px 8px; border-radius:12px; background:rgba(99,102,241,0.06); border:1px solid rgba(99,102,241,0.1); font-size:11px; font-weight:700; color:#4f46e5;">
+                                ${count} anclas
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <button class="btn-ghost group-hover:bg-brand group-hover:text-white transition-all duration-300" style="padding:6px 14px; font-size:11px; border-radius:8px;" onclick="grantBadgeTo('${pk}')">
+                            <i class="fas fa-award mr-1.5 opacity-80"></i>Otorgar
                         </button>
                     </td>
-                </tr>
-            `).join('');
+                </tr>`;
+            }).join('');
 
             // Show award panel when clicking
             window.grantBadgeTo = (pk) => {
