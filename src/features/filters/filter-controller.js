@@ -10,8 +10,8 @@ export function initFilters(mapManager) {
     /* Renders Category Chips from the categories definition. */
     CATEGORIAS.forEach(cat => {
         const chip = document.createElement('div');
-        // Initial Tailwind Classes
-        chip.className = 'px-5 py-2.5 bg-white/80 backdrop-blur border border-slate-100 rounded-full text-[11px] font-black text-slate-500 hover:bg-slate-100 transition-all cursor-pointer whitespace-nowrap shadow-sm uppercase tracking-wider active:scale-95';
+        // Initial Light Glass Classes
+        chip.className = 'px-5 py-2.5 glass rounded-full font-label text-slate-500 hover:text-brand hover:scale-105 transition-all cursor-pointer whitespace-nowrap active:scale-95';
         chip.textContent = cat.label;
 
         chip.onclick = () => toggleFilter(cat.id, chip, mapManager);
@@ -50,15 +50,15 @@ function toggleFilter(id, element, mapManager) {
     // Reset all chips
     document.querySelectorAll('#filter-bar-container div').forEach(c => {
         c.setAttribute('data-active', 'false');
-        c.className = 'px-5 py-2.5 bg-white/80 backdrop-blur border border-slate-100 rounded-full text-[11px] font-black text-slate-500 hover:bg-slate-100 transition-all cursor-pointer whitespace-nowrap shadow-sm uppercase tracking-wider active:scale-95';
+        c.className = 'px-5 py-2.5 glass rounded-full font-label text-slate-500 hover:text-brand hover:scale-105 transition-all cursor-pointer whitespace-nowrap active:scale-95';
     });
 
     const filterToApply = isActive ? 'all' : id;
 
     if (!isActive) {
         element.setAttribute('data-active', 'true');
-        // Active Styles
-        element.className = 'px-5 py-2.5 bg-indigo-600 border-indigo-500 text-white rounded-full text-[11px] font-black transition-all cursor-pointer whitespace-nowrap shadow-lg shadow-indigo-100 uppercase tracking-widest active:scale-95';
+        // Active Styles: Brand color + Neon Pulse (shadow pulse)
+        element.className = 'px-5 py-2.5 bg-brand border-indigo-400 text-white rounded-full font-label transition-all cursor-pointer whitespace-nowrap shadow-xl shadow-indigo-500/20 active:scale-95 animate-neon-pulse';
     }
 
     /* Filters markers by comparing category and assigning to correct layers. */

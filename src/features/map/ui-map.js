@@ -1,6 +1,7 @@
 import L from 'leaflet';
 import { AuthManager } from '../../core/auth.js';
 import { CATEGORIAS } from '../../core/categories.js';
+import { store } from '../../core/store.js';
 
 export class MapManager {
     constructor(containerId, defaultCoords) {
@@ -20,26 +21,29 @@ export class MapManager {
 
     /* Centralized icon generator. */
     _createIcon(type = 'public') {
-        let colorClass = 'filter-blue-500'; // Fallback
-
-        // CSS Filters mapping for the generic pin image (Approximation for Tailwind integration)
-        let filterStyle = 'filter: drop-shadow(0 0 2px rgba(0,0,0,0.3)) saturate(1.5);';
-        if (type === 'public') filterStyle += ' filter: hue-rotate(200deg);'; // Blue-ish
-        if (type === 'draft') filterStyle += ' filter: hue-rotate(30deg);'; // Orange-ish
-        if (type === 'temp') filterStyle += ' filter: hue-rotate(280deg);'; // Purple-ish 
+        const colors = {
+            public: 'indigo-500',
+            draft: 'amber-500',
+            temp: 'purple-500'
+        };
+        const color = colors[type] || colors.public;
 
         return L.divIcon({
             className: 'custom-pin-container',
             html: `
-                <div class="relative w-10 h-10 animate-in zoom-in duration-300">
-                    <img src="https://www.iconpacks.net/icons/2/free-location-pin-icon-2965-thumb.png" 
-                         style="${filterStyle}" 
-                         class="w-full h-full object-contain">
+                <div class="relative w-10 h-10 flex items-center justify-center animate-fade-slide">
+                    ${type === 'public' ? `<div class="absolute inset-0 rounded-full bg-indigo-400/20 animate-ping opacity-75"></div>` : ''}
+                    <div class="relative w-8 h-8 rounded-full glass flex items-center justify-center shadow-lg border-2 border-white">
+                        <span class="material-symbols-rounded text-${color} text-[20px]" style="font-variation-settings:'FILL' 1">
+                            ${type === 'draft' ? 'description' : 'location_on'}
+                        </span>
+                    </div>
+                    <div class="absolute -bottom-1 w-1.5 h-1.5 bg-${color} rounded-full border border-white"></div>
                 </div>
             `,
             iconSize: [40, 40],
             iconAnchor: [20, 40],
-            popupAnchor: [0, -40]
+            popupAnchor: [0, -42]
         });
     }
 
@@ -97,9 +101,7 @@ export class MapManager {
 
                 // Sync VM state when user closes popup manually via X
                 newMarker.on('popupclose', () => {
-                    import('../../core/store.js').then(({ store }) => {
-                        store.setState({ temporalPin: null });
-                    });
+                    store.setState({ temporalPin: null });
                 });
             } else {
                 // Actualizar posición siempre por si se movió el mapa/GPS
@@ -133,10 +135,17 @@ export class MapManager {
 
         const icon = this._createIcon(type);
         const marker = L.marker([lat, lon], { icon }).bindPopup(popupHTML, {
-            maxWidth: 300,
+            maxWidth: 320,
             className: 'custom-tailwind-popup',
             ...options
         });
+
+        // Asegurar limpieza de temporalPin al cerrar el popup
+        if (id === 'temp-pop') {
+            marker.on('popupclose', () => {
+                store.setState({ temporalPin: null });
+            });
+        }
         marker.category = category;
         marker.markerType = type;
 
@@ -163,7 +172,7 @@ export class MapManager {
             const carouselId = `carousel-${pin.id.substring(0, 8)}`;
             imageHTML = `
             <div class="relative my-3 group">
-                <div id="${carouselId}" class="flex overflow-x-auto snap-x snap-mandatory gap-2 no-scrollbar scroll-smooth rounded-2xl border border-slate-100 shadow-inner">
+                <div id="${carouselId}" class="flex overflow-x-auto snap-x snap-mandatory gap-2 no-scrollbar scroll-smooth rounded-2xl border border-slate-50">
                     ${pin.images.map(url => `
                         <div class="flex-none w-full snap-center aspect-video overflow-hidden cursor-zoom-in">
                             <img src="${url}" class="w-full h-full object-cover" onclick="window.open('${url}', '_blank')">
@@ -172,53 +181,80 @@ export class MapManager {
                 </div>
                 ${pin.images.length > 1 ? `
                     <button onclick="document.getElementById('${carouselId}').scrollBy({left: -240, behavior: 'smooth'})" 
-                        class="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur text-slate-800 rounded-full w-8 h-8 flex items-center justify-center shadow-md hover:bg-white transition-all opacity-0 group-hover:opacity-100">❮</button>
+                        class="absolute left-2 top-1/2 -translate-y-1/2 glass text-indigo-600 rounded-full w-8 h-8 flex items-center justify-center shadow-md hover:scale-110 transition-all opacity-0 group-hover:opacity-100">
+                        <span class="material-symbols-rounded text-[18px]">chevron_left</span>
+                    </button>
                     <button onclick="document.getElementById('${carouselId}').scrollBy({left: 240, behavior: 'smooth'})" 
-                        class="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur text-slate-800 rounded-full w-8 h-8 flex items-center justify-center shadow-md hover:bg-white transition-all opacity-0 group-hover:opacity-100">❯</button>
+                        class="absolute right-2 top-1/2 -translate-y-1/2 glass text-indigo-600 rounded-full w-8 h-8 flex items-center justify-center shadow-md hover:scale-110 transition-all opacity-0 group-hover:opacity-100">
+                        <span class="material-symbols-rounded text-[18px]">chevron_right</span>
+                    </button>
                 ` : ''}
             </div>`;
         }
 
         const catInfo = CATEGORIAS.find(c => c.id === pin.categoryId) || CATEGORIAS.find(c => c.id === 'nostr');
 
-        const btnClass = "flex-1 py-2 px-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 text-center shadow-sm";
-        const followBtn = `${btnClass} bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200`;
-        const zapBtn = `${btnClass} bg-amber-400 text-black hover:bg-amber-500 shadow-amber-200`;
-        const deleteBtn = `${btnClass} bg-rose-500 text-white hover:bg-rose-600 shadow-rose-200`;
+        const btnBase = "w-full py-2.5 px-3 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all active:scale-95 text-center shadow-sm flex items-center justify-center gap-1.5";
+        const followBtn = `${btnBase} bg-brand text-white hover:bg-brand-dark shadow-indigo-500/10`;
+        const zapBtn = `${btnBase} bg-amber-400 text-amber-950 hover:bg-amber-500 shadow-amber-500/10`;
+        const deleteBtn = `${btnBase} bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-100`;
 
         const actionsHTML = pin.isDraft ? `
-            <button onclick="window.completeAnchor('${pin.id}')" class="${followBtn}">🚀 Publicar</button>
-            <button onclick="window.deleteEntry('${pin.id}')" class="${deleteBtn}">🗑️ Borrar</button>
+            <div class="grid grid-cols-2 gap-3 w-full">
+                <button onclick="window.completeAnchor('${pin.id}')" class="${followBtn} !py-3">
+                    <span class="material-symbols-rounded text-[18px]">rocket_launch</span>
+                    <span>Publicar</span>
+                </button>
+                <button onclick="window.deleteEntry('${pin.id}')" class="${deleteBtn} !py-3">
+                    <span class="material-symbols-rounded text-[18px]">delete</span>
+                    <span>Borrar</span>
+                </button>
+            </div>
         ` : `
-            <button onclick="window.followUser('${pin.pubkey}', '${name}')" class="${followBtn}">Follow</button>
-            <button onclick="window.zapUser('${pin.pubkey}', '${name}', '${pin.title}')" class="${zapBtn}">⚡ Zap</button>
-            ${pin.pubkey === AuthManager.userPubkey ? `<button onclick="window.deleteAnchor('${pin.id}')" class="${deleteBtn}">🗑️ Borrar</button>` : ''}
+            <div class="grid grid-cols-2 gap-2 w-full">
+                <button onclick="window.followUser('${pin.pubkey}', '${name}')" class="${followBtn}">
+                    <span class="material-symbols-rounded text-[16px]">person_add</span>
+                    <span>Seguir</span>
+                </button>
+                <button onclick="window.zapUser('${pin.pubkey}', '${name}', '${pin.title}')" class="${zapBtn}">
+                    <span class="material-symbols-rounded text-[16px]" style="font-variation-settings:'FILL' 1">bolt</span>
+                    <span>Zap</span>
+                </button>
+                ${pin.pubkey === AuthManager.userPubkey ? `
+                    <button onclick="window.deleteAnchor('${pin.id}')" class="${deleteBtn} col-span-2 mt-1">
+                        <span class="material-symbols-rounded text-[16px]">delete</span>
+                        <span>Eliminar mi ancla</span>
+                    </button>` : ''}
+            </div>
         `;
 
         return `
-            <div class="popup-container min-w-[240px] p-1 font-sans" data-pubkey="${pin.pubkey}">
-                <div class="flex items-center gap-3 mb-3 pb-3 border-b border-slate-50">
-                    <img src="${picture}" class="w-10 h-10 rounded-full border-2 border-slate-100 object-cover" alt="${name}">
-                    <div class="flex flex-col">
-                        <span class="text-sm font-black text-slate-900 leading-none">${name}</span>
-                        <span class="text-[10px] font-mono text-slate-400">@${pin.pubkey.substring(0, 8)}</span>
+            <div class="popup-container p-5 font-sans animate-fade-slide min-w-[280px]" data-pubkey="${pin.pubkey}">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="relative">
+                        <img src="${picture}" class="w-10 h-10 rounded-full border border-slate-100 object-cover shadow-sm" alt="${name}">
+                        <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-indigo-500 border-2 border-white rounded-full"></div>
+                    </div>
+                    <div class="flex flex-col overflow-hidden">
+                        <span class="text-[13px] font-bold text-slate-900 truncate">${name}</span>
+                        <span class="text-[10px] font-mono text-slate-400 truncate">@${pin.pubkey.substring(0, 10)}...</span>
                     </div>
                 </div>
-                <div class="mb-4">
-                    <div class="flex flex-col gap-1 mb-2">
-                        <strong class="text-sm font-black text-slate-800">${pin.title}</strong>
-                        ${catInfo ? `<span class="bg-indigo-50 text-indigo-600 text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-indigo-100 self-start">${catInfo.label}</span>` : ''}
+                <div class="space-y-2">
+                    <div class="flex flex-col gap-1.5">
+                        <h3 class="text-[14px] font-heading text-slate-800 leading-tight">${pin.title}</h3>
+                        ${catInfo ? `<span class="bg-indigo-50 text-brand text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-indigo-100 self-start animate-neon-pulse">${catInfo.label}</span>` : ''}
                     </div>
                     ${imageHTML}
                     ${!pin.isDraft ? `
-                    <div class="text-[12px] text-slate-600 leading-relaxed font-medium mt-1">
+                    <p class="text-[12px] text-slate-600 leading-relaxed font-medium">
                         ${pin.description.length > 120
-                ? `${pin.description.substring(0, 120)}... <button onclick="window.showFullDescription('${pin.id}')" class="text-indigo-600 font-bold hover:underline">Ver más</button>`
-                : pin.description
-            }
-                    </div>` : ''}
+                    ? `${pin.description.substring(0, 120)}... <button onclick="window.showFullDescription('${pin.id}')" class="text-brand font-bold hover:underline">Leer más</button>`
+                    : pin.description
+                }
+                    </p>` : ''}
                 </div>
-                <div class="flex items-center gap-2 pt-2 border-t border-slate-50">${actionsHTML}</div>
+                <div class="mt-5 w-full">${actionsHTML}</div>
             </div>
         `;
     }
@@ -299,9 +335,9 @@ export class MapManager {
                     ${!isDraft ? `
                     <div class="text-[12px] text-slate-600 leading-relaxed font-medium mt-1">
                         ${cleanDescription.length > 120
-                ? `${cleanDescription.substring(0, 120)}... <button onclick="window.showFullDescription('${event.id}')" class="text-indigo-600 font-bold hover:underline">Ver más</button>`
-                : cleanDescription
-            }
+                    ? `${cleanDescription.substring(0, 120)}... <button onclick="window.showFullDescription('${event.id}')" class="text-indigo-600 font-bold hover:underline">Ver más</button>`
+                    : cleanDescription
+                }
                     </div>` : ''}
                 </div>
                 <div class="flex items-center gap-2 pt-2 border-t border-slate-50">${actionsHTML}</div>

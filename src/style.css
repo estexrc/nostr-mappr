@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+
 @import "tailwindcss";
 
 @theme {
@@ -10,67 +12,216 @@
     /* Typography */
     --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 
-    /* Dark Glass Surface tokens */
-    --glass-bg: rgba(255, 255, 255, 0.04);
-    --glass-border: rgba(255, 255, 255, 0.08);
+    /* Light Glass Surface tokens */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.4);
     --glass-neon: rgba(99, 102, 241, 0.3);
 
     /* Neon shadows */
     --shadow-neon: 0 0 15px -3px rgba(99, 102, 241, 0.4), 0 0 30px -10px rgba(99, 102, 241, 0.2);
     --shadow-neon-sm: 0 0 8px -2px rgba(99, 102, 241, 0.35);
+
+    /* Animations */
+    @keyframes fadeSlide {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes neonPulse {
+
+        0%,
+        100% {
+            box-shadow: 0 0 12px -4px rgba(99, 102, 241, 0.3);
+        }
+
+        50% {
+            box-shadow: 0 0 24px -4px rgba(99, 102, 241, 0.6);
+        }
+    }
+
+    --animate-fade-slide: fadeSlide 0.3s ease-out forwards;
+    --animate-neon-pulse: neonPulse 2.5s ease-in-out infinite;
+}
+
+/* --- BASE STYLES --- */
+
+body {
+    background: #f1f5f9;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    /* No scroll en el body principal */
+    position: relative;
+}
+
+/* Ocultar barras de desplazamiento globales */
+* {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+    display: none;
+}
+
+/* Ambient gradients */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+        radial-gradient(ellipse 60% 50% at 10% 0%, rgba(99, 102, 241, 0.05) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 90% 100%, rgba(203, 213, 225, 0.4) 0%, transparent 70%);
+}
+
+.glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03), 0 0 0 0.5px rgba(255, 255, 255, 0.8) inset;
 }
 
 /* --- LEAFLET OVERRIDES --- */
 
-body {
-    overflow-x: hidden;
+.leaflet-container {
+    background: #f1f5f9 !important;
 }
 
-.leaflet-container {
-    background: #f8fafc !important;
+/* Map Controls - Location & Zoom Stack */
+.leaflet-control-zoom {
+    border: none !important;
+    margin-right: 24px !important;
+    margin-bottom: 24px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+}
+
+/* Position location button relative to zoom stack via index.html or absolute */
+#btn-locate-me {
+    position: absolute;
+    bottom: 124px;
+    /* Positioned exactly above the zoom stack */
+    right: 24px;
+    z-index: 1000;
+}
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 12px !important;
+    color: #475569 !important;
+    width: 38px !important;
+    /* Slightly adjusted for better balance */
+    height: 38px !important;
+    line-height: 38px !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03) !important;
+    transition: all 0.2s !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.leaflet-control-zoom-in:hover,
+.leaflet-control-zoom-out:hover {
+    background: white !important;
+    color: #6366f1 !important;
+    transform: scale(1.05);
 }
 
 .custom-tailwind-popup .leaflet-popup-content-wrapper {
     background: rgba(255, 255, 255, 0.7) !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
     border-radius: 24px !important;
     padding: 0 !important;
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 0 0 0.5px rgba(255, 255, 255, 0.8) inset !important;
     border: 1px solid rgba(255, 255, 255, 0.4) !important;
 }
 
 .custom-tailwind-popup .leaflet-popup-content {
-    margin: 16px 24px 12px 16px !important;
-    overflow: hidden;
+    margin: 0 !important;
+    width: 320px !important;
+    /* Unified width for popups */
 }
 
 .custom-tailwind-popup .leaflet-popup-tip {
     background: rgba(255, 255, 255, 0.7) !important;
-    backdrop-filter: blur(12px) !important;
+    backdrop-filter: blur(24px) !important;
 }
 
 .custom-tailwind-popup .leaflet-popup-close-button {
-    top: 12px !important;
-    right: 12px !important;
+    top: 8px !important;
+    right: 8px !important;
     color: #94a3b8 !important;
-    font-size: 16px !important;
+    font-size: 14px !important;
 }
 
-/* --- SCROLLBAR CUSTOMIZATION --- */
-
-.no-scrollbar::-webkit-scrollbar {
-    display: none;
+/* Fix for minimal popups like "You are here" */
+.popup-minimal {
+    padding: 8px 16px 8px 10px !important;
+    min-width: 110px !important;
 }
+
+.popup-minimal span,
+.popup-minimal .text-sm {
+    font-size: 12px !important;
+}
+
+/* Modals Personalized Sizes */
+.modal-content-base {
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.modal-sm {
+    max-width: 320px;
+}
+
+.modal-md {
+    max-width: 440px;
+}
+
+.modal-lg {
+    max-width: 560px;
+}
+
+.modal-journal {
+    width: 50vw !important;
+    min-width: 50vw !important;
+    max-width: 90vw !important;
+}
+
+.modal-full {
+    max-width: 95vw;
+}
+
+/* --- SCROLLBAR CUSTOMIZATION (Safety fallback, though we hidden them) --- */
 
 .no-scrollbar {
-    -ms-overflow-style: none;
     scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
+
 .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -78,43 +229,37 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
+    background: rgba(99, 102, 241, 0.25);
     border-radius: 10px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #cbd5e1;
+/* --- UTILITIES --- */
+
+.animate-fade-slide {
+    animation: fadeSlide 0.3s ease-out forwards;
 }
 
-/* --- ANIMATIONS --- */
-
-@keyframes float {
-    0% {
-        transform: translateY(0px);
-    }
-
-    50% {
-        transform: translateY(-5px);
-    }
-
-    100% {
-        transform: translateY(0px);
-    }
+.animate-neon-pulse {
+    animation: neonPulse 2.5s ease-in-out infinite;
 }
 
-.animate-float {
-    animation: float 3s ease-in-out infinite;
+/* Inter font specific weights */
+.font-heading {
+    font-weight: 800;
+    letter-spacing: -0.02em;
 }
 
-/* Glassmorphism utility if needed for complex cases */
-.glass {
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+.font-label {
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
 }
 
-/* Fix for independent search debug wrapper */
-.debug-independent {
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+.btn-hover-effect {
+    transition: all 0.18s;
+}
+
+.btn-hover-effect:hover {
+    transform: translateY(-1px);
 }

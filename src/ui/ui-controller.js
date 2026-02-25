@@ -20,56 +20,54 @@ function getProfileModalHTML(profile = null) {
         const isConnect = AuthManager.loginMethod === 'connect';
 
         return `
-            <div class="p-8 flex flex-col items-center text-center gap-6 animate-in fade-in zoom-in duration-300">
-                <button class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl transition-colors" onclick="closeModal()">✕</button>
+            <div class="p-8 flex flex-col items-center text-center gap-6 animate-fade-slide">
+                <button class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 transition-colors" onclick="closeModal()">
+                    <span class="material-symbols-rounded text-[24px]">close</span>
+                </button>
                 <div class="flex flex-col items-center">
                     <div class="relative">
                         <img src="${profile.picture || 'https://www.gravatar.com/avatar/0?d=mp'}" alt="Avatar" 
-                             class="w-24 h-24 rounded-full border-4 border-indigo-500 shadow-xl object-cover">
+                             class="w-24 h-24 rounded-full border-2 border-white shadow-xl object-cover glass">
                         <div class="absolute bottom-0 right-0 w-6 h-6 ${(isReadOnly || isConnect) ? 'bg-amber-400' : 'bg-green-500'} border-2 border-white rounded-full flex items-center justify-center text-[10px]">
                             ${isConnect ? '🔗' : ''}
                         </div>
                     </div>
                     <h2 class="mt-4 text-2xl font-black text-slate-900 leading-tight">¡Hola, ${profile.display_name || profile.name || 'User'}!</h2>
                     <div class="flex flex-col items-center gap-2 mt-1">
-                        <span class="bg-slate-100 px-3 py-1 rounded-full text-[10px] font-mono text-slate-500 tracking-wider uppercase border border-slate-200">${npubShort}</span>
+                        <span class="bg-indigo-50/50 px-3 py-1 rounded-full text-[10px] font-mono text-indigo-600 font-bold border border-indigo-100/50 tracking-wider">${npubShort}</span>
                         ${isReadOnly ? `
-                            <span class="bg-amber-50 text-amber-600 text-[9px] font-black px-2 py-0.5 rounded border border-amber-100 uppercase tracking-widest">
+                            <span class="bg-amber-50 text-amber-600 text-[9px] font-black px-2 py-0.5 rounded-full border border-amber-100 uppercase tracking-widest">
                                 👁️ Modo Solo Lectura
-                            </span>
-                        ` : ''}
-                        ${isConnect ? `
-                            <span class="bg-indigo-50 text-indigo-600 text-[9px] font-black px-2 py-0.5 rounded border border-indigo-100 uppercase tracking-widest">
-                                🔗 Nostr Connect
                             </span>
                         ` : ''}
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-1 w-full bg-slate-50/50 p-4 rounded-3xl border border-slate-100">
+                <div class="grid grid-cols-3 gap-1 w-full bg-slate-50/30 p-4 rounded-[28px] border border-slate-100/50 glass shadow-sm">
                     <div class="flex flex-col"><strong class="text-lg font-black text-slate-900">24K</strong><span class="text-[9px] font-bold text-slate-400 uppercase">⚡ SATS</span></div>
-                    <div class="flex flex-col border-x border-slate-200"><strong class="text-lg font-black text-slate-900">${profile.following || 0}</strong><span class="text-[9px] font-bold text-slate-400 uppercase">FOLLOWING</span></div>
+                    <div class="flex flex-col border-x border-slate-200/50"><strong class="text-lg font-black text-slate-900">${profile.following || 0}</strong><span class="text-[9px] font-bold text-slate-400 uppercase">FOLLOWING</span></div>
                     <div class="flex flex-col"><strong class="text-lg font-black text-slate-900">${profile.followers || 0}</strong><span class="text-[9px] font-bold text-slate-400 uppercase">FOLLOWERS</span></div>
                 </div>
 
                 <div class="w-full text-left">
-                    <p id="profile-about" class="text-sm text-slate-600 leading-relaxed mb-6 italic">
+                    <p id="profile-about" class="text-sm text-slate-600 leading-relaxed mb-6 font-medium">
                         "${profile.about?.length > 150
-                ? `${profile.about.substring(0, 150)}... <button onclick="window.showFullDescription('profile')" class="text-indigo-600 font-bold not-italic">Ver más</button>`
+                ? `${profile.about.substring(0, 150)}... <button onclick="window.showFullDescription('profile')" class="text-indigo-600 font-bold">Ver más</button>`
                 : (profile.about || 'No description provided on Nostr.')}"
                     </p>
                     ${isReadOnly ? `
-                        <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 text-xs text-indigo-700 font-medium">
+                        <div class="bg-indigo-50/30 p-4 rounded-2xl border border-indigo-100/50 text-xs text-indigo-700 font-medium glass">
                             Conecta una extensión o usa Nostr Connect para poder publicar anclas.
                         </div>
                     ` : `
-                        <button class="w-full flex items-center justify-center gap-2 py-3 border border-slate-200 rounded-2xl font-bold text-slate-700 hover:bg-slate-50 transition-colors">
-                            <i class="fas fa-user-gear text-indigo-500"></i> Ajustes de Perfil
+                        <button class="w-full flex items-center justify-center gap-2 py-3.5 border border-slate-200/50 rounded-2xl font-bold text-slate-700 hover:bg-white/50 transition-all glass">
+                            <span class="material-symbols-rounded text-indigo-500 text-[20px]">settings</span>
+                            Ajustes de Perfil
                         </button>
                     `}
                 </div>
 
-                <button id="btn-modal-logout" class="w-full py-4 bg-slate-100 text-rose-500 rounded-2xl font-black hover:bg-rose-50 hover:text-rose-600 transition-all uppercase tracking-widest text-xs">
+                <button id="btn-modal-logout" class="w-full py-4 bg-rose-50/50 text-rose-500 rounded-2xl font-black hover:bg-rose-100/50 transition-all uppercase tracking-widest text-xs glass border border-rose-100/30">
                     CERRAR SESIÓN
                 </button>
             </div>
@@ -184,8 +182,9 @@ export function updateFloatingUser(profile = null) {
     }
 }
 
-export function openModal(html) {
+export function openModal(html, sizeClass = 'modal-lg') {
     modalContent.innerHTML = html;
+    modalContent.className = `bg-white/70 backdrop-blur-xl border border-white/50 rounded-[32px] shadow-2xl w-full max-h-[90vh] overflow-y-auto animate-fade-slide modal-content-base ${sizeClass}`;
     modalContainer.classList.remove('hidden');
     modalContainer.classList.add('flex');
 }
@@ -280,7 +279,7 @@ export function initUI(nostrInstance) {
                 if (!profile) profile = await nostrInstance.getUserProfile(AuthManager.userPubkey);
             }
 
-            openModal(getProfileModalHTML(profile));
+            openModal(getProfileModalHTML(profile), 'modal-md');
 
             // Extension Login
             document.getElementById('btn-modal-login')?.addEventListener('click', async () => {
@@ -360,7 +359,7 @@ export function initUI(nostrInstance) {
             showToast("Debes conectarte para ver tu diario.", "error");
             return;
         }
-        openModal(getJournalModalHTML([]));
+        openModal(getJournalModalHTML([]), 'modal-journal');
         if (window.fetchAndShowJournal) window.fetchAndShowJournal();
     });
 
@@ -477,20 +476,22 @@ window.showToast = showToast;
 
 export function getDescriptionModalHTML(title, description) {
     return `
-        <div class="p-8 flex flex-col gap-6 animate-in fade-in zoom-in duration-300">
-            <button class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl transition-colors" onclick="closeModal()">✕</button>
+        <div class="p-8 flex flex-col gap-6 animate-fade-slide">
+            <button class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 transition-colors" onclick="closeModal()">
+                <span class="material-symbols-rounded text-[24px]">close</span>
+            </button>
             <div class="text-center">
                 <h2 class="text-2xl font-black text-slate-900">${title}</h2>
-                <div class="h-1 w-12 bg-indigo-500 rounded-full mx-auto mt-2"></div>
+                <div class="h-1 w-12 bg-indigo-500 rounded-full mx-auto mt-3"></div>
             </div>
-            <div class="text-sm text-slate-600 leading-relaxed max-h-[60vh] overflow-y-auto custom-scrollbar pr-2 italic">
+            <div class="text-[13px] text-slate-600 leading-relaxed max-h-[60vh] overflow-y-auto custom-scrollbar pr-3 font-medium">
                 ${description.replace(/\n/g, '<br>')}
             </div>
-            <button onclick="closeModal()" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all">
+            <button onclick="closeModal()" class="w-full py-4 bg-brand text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-indigo-500/20">
                 CERRAR
             </button>
         </div>
-    `;
+        `;
 }
 
 export function getConfirmModalHTML(message, onConfirm) {

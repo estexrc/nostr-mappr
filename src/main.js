@@ -121,10 +121,10 @@ document.getElementById('btn-quick-pop').onclick = async (e) => {
     }
 
     const btn = e.currentTarget;
-    const icon = btn.querySelector('i');
-    const originalClass = "fas fa-map-pin";
-
-    icon.className = "fas fa-spinner fa-spin";
+    const icon = btn.querySelector('.material-symbols-rounded');
+    const originalIcon = icon.textContent;
+    icon.textContent = "progress_activity";
+    icon.classList.add('animate-spin');
 
     try {
         // Zero Latency: Use last known location from VM
@@ -137,25 +137,30 @@ document.getElementById('btn-quick-pop').onclick = async (e) => {
 
         // Create instant decision popup
         const decisionPopupHTML = `
-            <div class="pop-decision-container p-2 flex flex-col gap-3 min-w-[180px]">
+            <div class="pop-decision-container p-4 flex flex-col gap-4 min-w-[200px] animate-fade-slide">
                 <div class="text-center">
-                    <strong class="text-slate-900 font-black block">📍 Ubicación Confirmada</strong>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">¿Cómo quieres registrarla?</p>
+                    <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-3">
+                        <span class="material-symbols-rounded text-brand text-[22px]" style="font-variation-settings:'FILL' 1">location_on</span>
+                    </div>
+                    <h3 class="text-[14px] font-heading text-slate-900 leading-tight">Ubicación Confirmada</h3>
+                    <p class="font-label text-slate-400 mt-1">Selecciona el tipo de registro</p>
                 </div>
-                <div class="grid grid-cols-1 gap-2">
+                <div class="flex flex-col gap-2.5">
                     <button onclick="window.openReviewModal(${lat}, ${lng})" 
-                            class="py-2.5 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-100 ring-2 ring-white">
-                        ${isReadOnly ? '📝 BORRADOR LOCAL' : '📝 RESEÑA DIRECTA'}
+                            class="w-full py-2.5 bg-brand text-white rounded-xl font-bold text-[11px] uppercase tracking-wider shadow-lg shadow-indigo-500/20 btn-hover-effect flex items-center justify-center gap-2">
+                        <span class="material-symbols-rounded text-[18px]">edit_note</span>
+                        <span>${isReadOnly ? 'BORRADOR LOCAL' : 'RESEÑA DIRECTA'}</span>
                     </button>
                     ${!isReadOnly ? `
                         <button onclick="window.openDraftModal(${lat}, ${lng})" 
-                                class="py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl font-black text-[10px] uppercase tracking-widest">
-                            💾 GUARDAR BORRADOR
+                                class="w-full py-2.5 glass text-slate-700 rounded-xl font-bold text-[11px] uppercase tracking-wider btn-hover-effect flex items-center justify-center gap-2">
+                            <span class="material-symbols-rounded text-[18px]">save_as</span>
+                            <span>GUARDAR BORRADOR</span>
                         </button>
                     ` : ''}
                 </div>
-                ${isReadOnly ? '<p class="text-[9px] text-amber-600 font-bold text-center">👁️ Estás en modo solo lectura</p>' : ''}
-                <button onclick="window.clearTemporalPin()" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 mt-1">Cancelar</button>
+                ${isReadOnly ? '<p class="text-[10px] text-amber-600 font-bold text-center bg-amber-50 py-1.5 rounded-lg border border-amber-100/50">👁️ Modo Solo Lectura</p>' : ''}
+                <button onclick="window.clearTemporalPin()" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 mt-1 text-center w-full">Cancelar</button>
             </div>
         `;
 
@@ -167,15 +172,18 @@ document.getElementById('btn-quick-pop').onclick = async (e) => {
     } catch (err) {
         console.error("PoP Error:", err);
     } finally {
-        icon.className = originalClass;
+        icon.textContent = originalIcon;
+        icon.classList.remove('animate-spin');
     }
 };
 
 document.getElementById('btn-locate-me').onclick = async (e) => {
     e.stopPropagation();
-    const icon = e.currentTarget.querySelector('i');
+    const icon = e.currentTarget.querySelector('.material-symbols-rounded');
     app.map.clearSearchSelection();
-    icon.className = "fas fa-spinner fa-spin";
+    const originalIcon = icon.textContent;
+    icon.textContent = "progress_activity";
+    icon.classList.add('animate-spin');
 
     try {
         // Zero Latency: Use last known location from VM
@@ -193,8 +201,11 @@ document.getElementById('btn-locate-me').onclick = async (e) => {
                 lon: lng,
                 type: 'pop',
                 popupHTML: `
-                    <div class="p-2 text-center">
-                        <div class="font-bold text-slate-800">📍 Estás aquí</div>
+                    <div class="popup-minimal text-center">
+                        <div class="font-bold text-slate-800 flex items-center gap-1 justify-center">
+                            <span class="text-[12px]">📍</span>
+                            <span class="text-[12px]">Estás aquí</span>
+                        </div>
                     </div>
                 `
             }
@@ -203,6 +214,7 @@ document.getElementById('btn-locate-me').onclick = async (e) => {
     } catch (err) {
         console.error("Locate error:", err);
     } finally {
-        icon.className = "fas fa-crosshairs";
+        icon.textContent = originalIcon;
+        icon.classList.remove('animate-spin');
     }
 };
