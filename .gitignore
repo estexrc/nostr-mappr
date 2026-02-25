@@ -41,3 +41,7 @@ yarn-error.log*
 
 # Archivos temporales de sistema
 Thumbs.db
+
+# Skills Antigravity
+.agents/
+skills-lock.json
