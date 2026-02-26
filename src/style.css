@@ -604,6 +604,100 @@ body::before {
     }
 }
 
+.auth-overlay.closing {
+    animation: authPortalExit 0.4s ease-in forwards;
+}
+
+@keyframes authPortalExit {
+    from {
+        opacity: 1;
+        backdrop-filter: blur(12px);
+    }
+
+    to {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+}
+
+.auth-modal.closing {
+    animation: authModalExit 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes authModalExit {
+    from {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    to {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+}
+
+.auth-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2.5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: auth-spin 0.8s linear infinite;
+    display: inline-block;
+}
+
+@keyframes auth-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.auth-error-msg {
+    color: #ef4444;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 12px;
+    padding: 10px;
+    background: rgba(239, 68, 68, 0.08);
+    border-radius: 12px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    animation: authErrorShake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+@keyframes authErrorShake {
+
+    10%,
+    90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+
+    20%,
+    80% {
+        transform: translate3d(2px, 0, 0);
+    }
+
+    30%,
+    50%,
+    70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+
+    40%,
+    60% {
+        transform: translate3d(4px, 0, 0);
+    }
+}
+
+.btn-auth-primary.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    pointer-events: none;
+    opacity: 0.9;
+}
+
 /* iOS Keyboard Safety */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
     .auth-modal {

@@ -122,7 +122,48 @@ export const AuthManager = {
     },
 
     /**
-     * Nostr Connect Login (NIP-46)
+     * Email Login leveraging NIP-46 (Nostr Connect)
+     * Resolves email as NIP-05 and initiates a session.
+     */
+    async loginEmail(email, password) {
+        try {
+            // 1. Resolve NIP-05
+            const profile = await nip05.queryProfile(email);
+            if (!profile || !profile.pubkey) {
+                throw new Error("No se encontró una cuenta de Nostr vinculada a este email.");
+            }
+
+            // 2. Generate ephemeral client key for this session
+            const clientSk = generateSecretKey();
+            const clientSkHex = bytesToHex(clientSk);
+
+            // 3. Initiate NIP-46 session state
+            // Note: The actual connection is established by NostrService/NostrConnectService
+            this.userPubkey = profile.pubkey;
+            this.loginMethod = 'connect';
+            this.connectData = {
+                signerPubkey: profile.pubkey,
+                clientSecretKey: clientSkHex,
+                relays: profile.relays || ['wss://relay.nsec.app', 'wss://bunker.strfry.chat']
+            };
+
+            // 4. Persist for iOS Safari stability
+            localStorage.setItem('nostr_user_pubkey', this.userPubkey);
+            localStorage.setItem('nostr_login_method', 'connect');
+            localStorage.setItem('nostr_connect_data', JSON.stringify(this.connectData));
+
+            return {
+                pubkey: this.userPubkey,
+                bunkerUrl: `bunker://${this.userPubkey}?relay=${this.connectData.relays[0]}`
+            };
+        } catch (error) {
+            console.error("Email login error:", error);
+            throw error;
+        }
+    },
+
+    /**
+     * Nostr Connect Login (NIP-46) - Legacy/Manual
      */
     async loginConnect(signerPubkey, clientSecretKeyHex) {
         this.userPubkey = signerPubkey;

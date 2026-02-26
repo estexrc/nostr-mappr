@@ -392,14 +392,46 @@ export function openAuthModal(initialTab = 'generar') {
         const btnEmail = document.getElementById('btn-auth-email');
         const inputEmail = document.getElementById('auth-email');
         const inputPass = document.getElementById('auth-password');
+        const tabContent = document.getElementById('auth-tab-content');
+
         if (btnEmail && inputEmail && inputPass) {
             const validateEmail = () => {
                 btnEmail.disabled = !inputEmail.value.includes('@') || inputPass.value.length < 8;
             };
             inputEmail.oninput = validateEmail;
             inputPass.oninput = validateEmail;
-            btnEmail.onclick = () => {
-                showToast("Login vía email pronto disponible", "info");
+
+            btnEmail.onclick = async (e) => {
+                e.preventDefault();
+                // Clear previous errors
+                tabContent.querySelectorAll('.auth-error-msg').forEach(msg => msg.remove());
+
+                // Set Loading State
+                const originalContent = btnEmail.innerHTML;
+                btnEmail.disabled = true;
+                btnEmail.classList.add('loading');
+                btnEmail.innerHTML = `<span class="auth-spinner"></span> Iniciando sesión...`;
+
+                try {
+                    await AuthManager.loginEmail(inputEmail.value.trim(), inputPass.value.trim());
+                    showToast("Sesión iniciada correctamente", "success");
+
+                    // Success Moment: Smooth Exit
+                    window.closeAuthPortal();
+
+                    // Reload to initialize Nostr Service with new session
+                    setTimeout(() => location.reload(), 500);
+                } catch (err) {
+                    btnEmail.disabled = false;
+                    btnEmail.classList.remove('loading');
+                    btnEmail.innerHTML = originalContent;
+
+                    // Inject Semantic Error
+                    const errorEl = document.createElement('div');
+                    errorEl.className = 'auth-error-msg';
+                    errorEl.innerText = err.message || "Error al conectar con el servidor de llaves";
+                    tabContent.appendChild(errorEl);
+                }
             };
         }
 
@@ -428,7 +460,14 @@ export function openAuthModal(initialTab = 'generar') {
 window.openAuthModal = openAuthModal;
 window.closeAuthPortal = () => {
     const overlay = document.getElementById('auth-portal-overlay');
-    if (overlay) overlay.remove();
+    const modal = document.getElementById('auth-portal-modal');
+    if (overlay && modal) {
+        overlay.classList.add('closing');
+        modal.classList.add('closing');
+        setTimeout(() => overlay.remove(), 400);
+    } else if (overlay) {
+        overlay.remove();
+    }
 };
 
 /** Opens the dedicated wide Journal overlay (no CSS class conflicts) */
