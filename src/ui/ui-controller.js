@@ -36,7 +36,7 @@ function getProfileModalHTML(profile = null) {
                             ${isConnect ? '🔗' : ''}
                         </div>
                     </div>
-                    <h2 class="mt-4 text-2xl font-black text-slate-900 leading-tight">¡Hola, ${profile.display_name || profile.name || 'User'}!</h2>
+                    <h2 class="mt-4 text-2xl font-black text-slate-900 leading-tight">¡Hola, ${profile.display_name || profile.name || 'Usuario'}!</h2>
                     <div class="flex flex-col items-center gap-2 mt-1">
                         <span class="bg-indigo-50/50 px-3 py-1 rounded-full text-[10px] font-mono text-indigo-600 font-bold border border-indigo-100/50 tracking-wider">${npubShort}</span>
                         ${isReadOnly ? `
@@ -684,11 +684,18 @@ export function initUI(nostrInstance) {
 
     if (userBtn) {
         userBtn.addEventListener('click', async () => {
-            let profile = null;
             if (AuthManager.isLoggedIn()) {
-                profile = AuthManager.profileCache[AuthManager.userPubkey];
-                if (!profile) profile = await nostrInstance.getUserProfile(AuthManager.userPubkey);
-                openModal(getProfileModalHTML(profile), 'modal-md');
+                let profile = AuthManager.profileCache[AuthManager.userPubkey];
+                if (!profile) {
+                    try {
+                        profile = await nostrInstance.getUserProfile(AuthManager.userPubkey);
+                    } catch (e) {
+                        console.warn("Could not fetch profile, using default.");
+                    }
+                }
+                
+                // If still null, pass empty object to trigger the Profile Panel instead of legacy login
+                openModal(getProfileModalHTML(profile || {}), 'modal-md');
             } else {
                 openAuthModal('generar');
                 return;
