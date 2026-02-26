@@ -109,6 +109,7 @@ export const AuthManager = {
     async generate() {
         const sk = generateSecretKey();
         const pk = getPublicKey(sk);
+        const nsec = nip19.nsecEncode(sk);
 
         this.userPubkey = pk;
         this.loginMethod = 'local';
@@ -118,7 +119,7 @@ export const AuthManager = {
         localStorage.setItem('nostr_login_method', 'local');
         localStorage.setItem('nostr_local_sk', this.localSecretKey);
 
-        return pk;
+        return { pubkey: pk, nsec };
     },
 
     /**

@@ -287,13 +287,16 @@ export function getDraftModalHTML(lat, lng) {
  */
 export function updateFloatingUser(profile = null) {
     if (profile) {
-        userNameMini.textContent = profile.display_name || profile.name || "User";
-        if (profile.picture) userAvatarMini.src = profile.picture;
+        userNameMini.textContent = profile.display_name || profile.name || "Usuario";
+
+        // Use Robohash as Identicon fallback if no picture
+        const avatarUrl = profile.picture || `https://robohash.org/${AuthManager.userPubkey}.png?set=set4`;
+        userAvatarMini.src = avatarUrl;
 
         const npubShort = AuthManager.userPubkey ? AuthManager.userPubkey.substring(0, 8) : '...';
         userPubkeyMini.textContent = '@' + npubShort;
     } else {
-        userNameMini.textContent = "Guest";
+        userNameMini.textContent = "Invitado";
         userAvatarMini.src = "https://www.gravatar.com/avatar/0?d=mp";
         userPubkeyMini.textContent = "@...";
     }
@@ -438,17 +441,66 @@ export function openAuthModal(initialTab = 'generar') {
         const btnGenerate = document.getElementById('btn-auth-generate');
         if (btnGenerate) {
             btnGenerate.onclick = async () => {
+                const originalText = btnGenerate.innerHTML;
                 try {
                     btnGenerate.disabled = true;
-                    btnGenerate.innerHTML = 'Generando identidad...';
-                    await AuthManager.generate();
-                    showToast("¡Nueva identidad generada!", "success");
-                    window.closeAuthPortal();
-                    location.reload();
+                    btnGenerate.innerHTML = `<span class="auth-spinner"></span> Generando...`;
+
+                    // 1. Generate local identity
+                    const { nsec } = await AuthManager.generate();
+
+                    // 2. Clear content and show onboarding
+                    tabContent.innerHTML = `
+                        <div class="tab-content-fade flex flex-col h-full">
+                            <div class="auth-info-box">
+                                <h4 class="text-sm font-bold text-slate-900 mb-1">¡Identidad Creada!</h4>
+                                <p class="text-[12px] text-slate-500 leading-relaxed">Esta es tu clave secreta de acceso. Úsala para recuperar tu cuenta en el futuro.</p>
+                            </div>
+
+                            <div class="nsec-alert-box">
+                                <p class="text-[11px] font-bold text-amber-700 flex items-center gap-2">
+                                    <span class="material-symbols-rounded text-[16px]">warning</span>
+                                    Guardado Obligatorio
+                                </p>
+                                <div class="nsec-display" id="nsec-output">${nsec}</div>
+                                <p class="text-[10px] text-slate-400 mt-3 leading-tight">Mappr no guarda tus claves en ningún servidor. Si pierdes este código, perderás el acceso.</p>
+                            </div>
+
+                            <div class="mt-auto pt-6">
+                                <button id="btn-copy-start" class="btn-auth-primary">
+                                    Copiar y Empezar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+
+                    // 3. Setup Copy & Start logic
+                    const btnCopy = document.getElementById('btn-copy-start');
+                    btnCopy.onclick = async () => {
+                        try {
+                            // Unified clipboard for iOS/Safari
+                            await navigator.clipboard.writeText(nsec);
+                            showToast("¡Clave copiada con éxito!", "success");
+
+                            // Success Animation
+                            btnCopy.classList.add('btn-auth-success');
+                            btnCopy.innerHTML = `<span class="material-symbols-rounded text-[20px]">check_circle</span> ¡Todo listo!`;
+
+                            // Delayed Exit
+                            setTimeout(() => {
+                                window.closeAuthPortal();
+                                setTimeout(() => location.reload(), 400);
+                            }, 1000);
+
+                        } catch (err) {
+                            showToast("Error al copiar. Por favor hazlo manualmente.", "error");
+                        }
+                    };
+
                 } catch (e) {
                     showToast(e.message, "error");
                     btnGenerate.disabled = false;
-                    btnGenerate.innerHTML = 'Generar identidad y continuar';
+                    btnGenerate.innerHTML = originalText;
                 }
             };
         }
@@ -685,6 +737,9 @@ export function initUI(nostrInstance) {
         if (cachedProfile) {
             updateFloatingUser(cachedProfile);
         } else {
+            // Show minimal info (Identicon fallback) immediately for new identities
+            updateFloatingUser({});
+
             nostrInstance.getUserProfile(pubkey).then(profile => {
                 if (profile) {
                     AuthManager.saveProfile(pubkey, profile);

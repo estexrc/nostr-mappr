@@ -698,6 +698,37 @@ body::before {
     opacity: 0.9;
 }
 
+.nsec-alert-box {
+    background: rgba(254, 243, 199, 0.4);
+    border: 1px dashed #fbbf24;
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: 16px;
+    animation: authErrorShake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+.nsec-display {
+    background: white;
+    padding: 12px;
+    border-radius: 12px;
+    font-family: monospace;
+    font-size: 11px;
+    word-break: break-all;
+    color: #1e293b;
+    border: 1px solid #e2e8f0;
+    margin-top: 10px;
+    user-select: all;
+}
+
+.btn-auth-success {
+    background: #10b981 !important;
+    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2) !important;
+}
+
+.btn-auth-success:hover {
+    background: #059669 !important;
+}
+
 /* iOS Keyboard Safety */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
     .auth-modal {
