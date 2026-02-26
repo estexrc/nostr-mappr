@@ -10,6 +10,10 @@ const userPubkeyMini = document.getElementById('user-pubkey-mini');
 const modalContainer = document.getElementById('modal-container');
 const modalContent = document.getElementById('modal-content');
 
+/* --- JOURNAL MODAL (dedicated wide overlay) --- */
+const journalModal = document.getElementById('journal-modal');
+const journalModalContent = document.getElementById('journal-modal-content');
+
 /**
  * Generates dynamic HTML for the profile modal based on session state.
  */
@@ -185,6 +189,7 @@ export function updateFloatingUser(profile = null) {
 export function openModal(html, sizeClass = 'modal-lg') {
     modalContent.innerHTML = html;
     modalContent.className = `bg-white/70 backdrop-blur-xl border border-white/50 rounded-[32px] shadow-2xl w-full max-h-[90vh] overflow-y-auto animate-fade-slide modal-content-base ${sizeClass}`;
+    modalContent.style.cssText = ''; // clear any leftover inline styles
     modalContainer.classList.remove('hidden');
     modalContainer.classList.add('flex');
 }
@@ -193,6 +198,19 @@ export function closeModal() {
     modalContainer.classList.add('hidden');
     modalContainer.classList.remove('flex');
     modalContent.innerHTML = '';
+    modalContent.style.cssText = '';
+}
+
+/** Opens the dedicated wide Journal overlay (no CSS class conflicts) */
+export function openJournalModal(html) {
+    closeModal(); // Guarantee no overlap
+    journalModalContent.innerHTML = html;
+    journalModal.style.display = 'flex';
+}
+/** Closes the dedicated Journal overlay */
+export function closeJournalModal() {
+    journalModal.style.display = 'none';
+    journalModalContent.innerHTML = '';
 }
 
 const ANCHOR_STATES = {
@@ -202,10 +220,14 @@ const ANCHOR_STATES = {
 };
 
 /**
- * Generates dynamic HTML for the Journal/Logbook table.
+ * Generates only the <tr> rows for the journal table.
  */
-export function getJournalModalHTML(entries = []) {
-    const rows = entries.map(ev => {
+export function getJournalTableRowsHTML(entries = []) {
+    if (entries.length === 0) {
+        return '<tr><td colspan="5" class="py-24 text-center font-bold text-slate-300 uppercase tracking-widest text-sm">No hay registros aún</td></tr>';
+    }
+
+    return entries.map(ev => {
         const config = ANCHOR_STATES[ev.kind] || { label: 'Unknown', color: 'bg-slate-400', text: 'text-slate-400' };
 
         const title = ev.kind === 1
@@ -222,18 +244,18 @@ export function getJournalModalHTML(entries = []) {
 
         return `
             <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                <td class="py-4 pl-6 text-[11px] font-bold text-slate-400 uppercase tracking-tighter">${date}</td>
-                <td class="py-4 max-w-[200px] font-black text-slate-800 text-sm truncate">${title}</td>
-                <td class="py-4">
+                <td class="py-4 text-[11px] font-bold text-slate-400 uppercase tracking-tighter text-center">${date}</td>
+                <td class="py-4 max-w-[200px] font-black text-slate-800 text-sm truncate text-center">${title}</td>
+                <td class="py-4 text-center">
                     <span class="font-bold text-indigo-500 text-[10px] uppercase tracking-wider">${categoryText}</span>
                 </td>
                 <td class="py-4 text-center">
                     <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase text-white ${config.color}">${config.label}</span>
                 </td>
                 <td class="py-4 pr-6">
-                    <div class="flex items-center justify-end gap-2">
+                    <div class="flex items-center justify-center gap-2">
                         <button class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 transition-all border border-indigo-100" 
-                                onclick="window.centerMapAndOpenPopup('${ev.id}', ${lat}, ${lng})" title="View on Map">📍</button>
+                                onclick="window.centerMapAndOpenPopup('${ev.id}', ${lat}, ${lng}); window.closeJournalModal()" title="View on Map">📍</button>
                         ${(ev.kind === 30024 || ev.kind === 'local') ? `<button class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center hover:bg-purple-100 transition-all border border-purple-100" onclick="window.completeAnchor('${ev.id}')" title="Publish">🚀</button>` : ''}
                         <button class="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-rose-50 hover:text-rose-600 transition-all border border-slate-100" onclick="window.deleteEntry('${ev.id}')" title="Delete">🗑️</button>
                     </div>
@@ -241,27 +263,95 @@ export function getJournalModalHTML(entries = []) {
             </tr>
         `;
     }).join('');
+}
+
+/**
+ * Generates dynamic HTML for the Journal/Logbook table.
+ */
+export function getJournalModalHTML(entries = []) {
+    const rowsHTML = getJournalTableRowsHTML(entries);
+
+    const categoriesHTML = [
+        { id: 'all', label: 'Categorías' },
+        ...CATEGORIAS
+    ].map(cat => `<option value="${cat.id}">${cat.label}</option>`).join('');
+
+    const statusOptions = [
+        { id: 'all', label: 'Estados' },
+        { id: '1', label: '⚓ Anchored' },
+        { id: '30024', label: '📝 Draft' },
+        { id: 'local', label: '💾 Local' }
+    ].map(opt => `<option value="${opt.id}">${opt.label}</option>`).join('');
 
     return `
-        <div class="p-8 flex flex-col gap-6 animate-in fade-in slide-in-from-top-4 duration-300 w-full lg:max-w-3xl">
-            <button class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl transition-colors" id="btn-close-journal">✕</button>
-            <h2 class="text-2xl font-black text-slate-900 self-center">Diario de Anclas</h2>
+        <div class="p-8 flex flex-col gap-6 animate-in fade-in slide-in-from-top-4 duration-300 w-full relative h-[75vh]">
+            <button class="absolute top-8 right-8 text-slate-400 hover:text-slate-600 text-2xl transition-colors" id="btn-close-journal">✕</button>
             
-            <div class="overflow-x-auto bg-white rounded-[24px] border border-slate-100 shadow-inner">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-50/80 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
-                            <th class="py-3 pl-6">Fecha</th>
-                            <th class="py-3">Lugar</th>
-                            <th class="py-3">Categoría</th>
-                            <th class="py-3 text-center">Estado</th>
-                            <th class="py-3 pr-6 text-right">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-50">
-                        ${rows || '<tr><td colspan="5" class="py-20 text-center font-bold text-slate-300 uppercase tracking-widest">No hay entradas aún.</td></tr>'}
-                    </tbody>
-                </table>
+            <div class="flex flex-col items-center gap-2">
+                <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tighter">Diario de Anclas</h2>
+                <div class="h-1.5 w-14 bg-indigo-500 rounded-full shadow-sm shadow-indigo-200"></div>
+            </div>
+
+            <!-- Filters Section (4-Column Grid) -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
+                <!-- Date Filter -->
+                <div class="flex flex-col gap-2 relative">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pl-1">Fecha</label>
+                    <div id="journal-filter-date-trigger" class="input-glass w-full cursor-pointer group">
+                        <span id="journal-filter-date-label" class="text-slate-600 font-bold truncate">Todas</span>
+                        <span class="material-symbols-rounded text-slate-400 ml-auto text-lg group-hover:text-indigo-500 transition-colors">calendar_month</span>
+                    </div>
+                </div>
+
+                <!-- Name Filter -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pl-1">Nombre</label>
+                    <input type="text" id="journal-filter-name" maxlength="25"
+                        class="input-glass w-full text-xs" 
+                        value="">
+                </div>
+
+                <!-- Category Filter -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pl-1">Categoría</label>
+                    <select id="journal-filter-category" class="input-glass select-glass w-full cursor-pointer">
+                        ${categoriesHTML}
+                    </select>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pl-1">Estado</label>
+                    <select id="journal-filter-status" class="input-glass select-glass w-full cursor-pointer">
+                        ${statusOptions}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Clear Filters Link -->
+            <div class="flex justify-center -mt-2">
+                <button id="journal-clear-filters" class="text-[10px] font-black underline text-slate-400 hover:text-indigo-500 transition-colors">
+                    Borrar filtros
+                </button>
+            </div>
+            
+            <div class="flex-1 min-h-0 overflow-hidden bg-white rounded-[32px] border border-slate-100 shadow-2xl shadow-slate-200/40 flex flex-col">
+                <div class="flex-1 overflow-y-auto custom-scrollbar">
+                    <table class="w-full border-collapse">
+                        <thead class="sticky top-0 z-10">
+                            <tr class="bg-slate-50/90 backdrop-blur-md text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                <th class="py-5 text-center px-6">Fecha</th>
+                                <th class="py-5 text-center px-6">Lugar</th>
+                                <th class="py-5 text-center px-6">Categoría</th>
+                                <th class="py-5 text-center px-6">Estado</th>
+                                <th class="py-5 text-center px-6">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="journal-entries-body" class="divide-y divide-slate-50">
+                            ${rowsHTML}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     `;
@@ -359,7 +449,6 @@ export function initUI(nostrInstance) {
             showToast("Debes conectarte para ver tu diario.", "error");
             return;
         }
-        openModal(getJournalModalHTML([]), 'modal-journal');
         if (window.fetchAndShowJournal) window.fetchAndShowJournal();
     });
 
@@ -367,10 +456,20 @@ export function initUI(nostrInstance) {
         if (e.target === modalContainer) closeModal();
     });
 
+    journalModal?.addEventListener('click', (e) => {
+        if (e.target === journalModal) closeJournalModal();
+    });
+
     // Handle close buttons in modals via event delegation
     modalContent.addEventListener('click', (e) => {
-        if (e.target.closest('#btn-close-journal') || e.target.closest('#btn-close-draft') || e.target.closest('#btn-close-publish')) {
+        if (e.target.closest('#btn-close-draft') || e.target.closest('#btn-close-publish')) {
             closeModal();
+        }
+    });
+
+    journalModalContent.addEventListener('click', (e) => {
+        if (e.target.closest('#btn-close-journal')) {
+            closeJournalModal();
         }
     });
 
@@ -511,7 +610,7 @@ export function getConfirmModalHTML(message, onConfirm) {
             </div>
             
             <div class="grid grid-cols-2 gap-3 w-full">
-                <button onclick="window.closeModal()" class="py-4 bg-slate-100 text-slate-500 rounded-2xl font-black hover:bg-slate-200 transition-all uppercase tracking-widest text-[10px]">
+                <button onclick="window.closeModal(); window.closeJournalModal();" class="py-4 bg-slate-100 text-slate-500 rounded-2xl font-black hover:bg-slate-200 transition-all uppercase tracking-widest text-[10px]">
                     CANCELAR
                 </button>
                 <button onclick="window.executeConfirmAction()" class="py-4 bg-rose-600 text-white rounded-2xl font-black hover:bg-rose-700 shadow-lg shadow-rose-200 transition-all uppercase tracking-widest text-[10px]">
@@ -523,3 +622,105 @@ export function getConfirmModalHTML(message, onConfirm) {
 }
 
 window.closeModal = closeModal;
+window.closeJournalModal = closeJournalModal;
+
+/**
+ * Shows a modern custom glassmorphism calendar.
+ * @param {HTMLElement} trigger - The element that triggered the calendar.
+ * @param {string} currentVal - Current selected date in 'YYYY-MM-DD' format.
+ * @param {Array<string>} activeDates - Array of dates in 'YYYY-MM-DD' that have data.
+ * @param {Function} onSelect - Callback when a date is selected.
+ */
+export function showCustomCalendar(trigger, currentVal, activeDates = [], onSelect) {
+    const existing = document.getElementById('stitch-calendar-popup');
+    if (existing) existing.remove();
+
+    const calendar = document.createElement('div');
+    calendar.id = 'stitch-calendar-popup';
+    calendar.className = 'stitch-calendar';
+
+    // Position
+    const rect = trigger.getBoundingClientRect();
+    calendar.style.top = `${rect.bottom + window.scrollY + 8}px`;
+    calendar.style.left = `${rect.left + window.scrollX}px`;
+
+    let viewDate = currentVal ? new Date(currentVal + 'T12:00:00') : new Date();
+    if (isNaN(viewDate.getTime())) viewDate = new Date();
+
+    const render = () => {
+        const year = viewDate.getFullYear();
+        const month = viewDate.getMonth();
+        const monthName = viewDate.toLocaleString('es-ES', { month: 'long' });
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        const daysHTML = [];
+        // Empty slots for first week
+        for (let i = 0; i < firstDay; i++) daysHTML.push('<div class="calendar-day opacity-0 pointer-events-none"></div>');
+
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const isSelected = dateStr === currentVal;
+            const isToday = dateStr === todayStr;
+            const hasData = activeDates.includes(dateStr);
+            daysHTML.push(`
+                <div class="calendar-day relative ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''} ${hasData ? 'calendar-day-active' : ''}" 
+                     data-date="${dateStr}">${d}</div>
+            `);
+        }
+
+        calendar.innerHTML = `
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center justify-between px-1">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${year}</span>
+                        <span class="text-sm font-black text-slate-800 capitalize">${monthName}</span>
+                    </div>
+                    <div class="flex gap-1">
+                        <button class="calendar-header-btn" id="cal-prev"><span class="material-symbols-rounded text-lg">chevron_left</span></button>
+                        <button class="calendar-header-btn" id="cal-next"><span class="material-symbols-rounded text-lg">chevron_right</span></button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 uppercase pb-1">
+                    <div>Do</div><div>Lu</div><div>Ma</div><div>Mi</div><div>Ju</div><div>Vi</div><div>Sá</div>
+                </div>
+                <div class="grid grid-cols-7 gap-1">
+                    ${daysHTML.join('')}
+                </div>
+                <div class="flex justify-between items-center pt-2 border-t border-slate-100/50 mt-1">
+                    <button id="cal-clear" class="text-[10px] font-black text-indigo-500 hover:text-indigo-700 uppercase tracking-wider px-2 py-1">Limpiar</button>
+                    <button id="cal-today" class="text-[10px] font-black text-slate-400 hover:text-slate-600 uppercase tracking-wider px-2 py-1">Hoy</button>
+                </div>
+            </div>
+        `;
+
+        // Events
+        calendar.querySelector('#cal-prev').onclick = (e) => { e.stopPropagation(); viewDate.setMonth(viewDate.getMonth() - 1); render(); };
+        calendar.querySelector('#cal-next').onclick = (e) => { e.stopPropagation(); viewDate.setMonth(viewDate.getMonth() + 1); render(); };
+        calendar.querySelector('#cal-today').onclick = (e) => { e.stopPropagation(); onSelect(todayStr); calendar.remove(); };
+        calendar.querySelector('#cal-clear').onclick = (e) => { e.stopPropagation(); onSelect(''); calendar.remove(); };
+        calendar.querySelectorAll('.calendar-day[data-date]').forEach(day => {
+            day.onclick = (e) => { e.stopPropagation(); onSelect(day.dataset.date); calendar.remove(); };
+        });
+    };
+
+    render();
+    document.body.appendChild(calendar);
+
+    // Global click listener to close
+    const closeCal = (e) => {
+        if (!calendar.contains(e.target) && e.target !== trigger && !trigger.contains(e.target)) {
+            calendar.remove();
+            document.removeEventListener('click', closeCal);
+        }
+    };
+    setTimeout(() => document.addEventListener('click', closeCal), 0);
+}
+
+// Global exposure
+window.openModal = openModal;
+window.openJournalModal = openJournalModal;
+window.showCustomCalendar = showCustomCalendar;

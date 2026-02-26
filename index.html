@@ -94,12 +94,21 @@
         </button>
     </div>
 
-    <!-- Main Modal Container -->
+    <!-- Main Modal Container (generic: profile, publish, confirm, etc.) -->
     <div id="modal-container"
         class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[2000] hidden items-center justify-center p-4">
         <div id="modal-content"
-            class="bg-white/70 backdrop-blur-xl border border-white/50 rounded-[32px] shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto custom-scrollbar animate-fade-slide">
+            class="bg-white/70 backdrop-blur-xl border border-white/50 rounded-[32px] shadow-2xl w-full max-h-[90vh] overflow-y-auto">
             <!-- Dynamic content -->
+        </div>
+    </div>
+
+    <!-- Dedicated Journal Modal (Wide layout) -->
+    <div id="journal-modal"
+        style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.45); backdrop-filter:blur(12px); z-index:2000; align-items:center; justify-content:center; padding:40px;">
+        <div id="journal-modal-content"
+            style="background:rgba(255,255,255,0.7); backdrop-filter:blur(32px); border:1px solid rgba(255,255,255,0.5); border-radius:32px; box-shadow:0 30px 60px -12px rgba(0,0,0,0.5); width:50vw; min-width:480px; max-width:1400px; max-height:92vh; overflow-y-auto; position:relative;">
+            <!-- Journal content will be injected here -->
         </div>
     </div>
 

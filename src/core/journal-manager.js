@@ -1,6 +1,6 @@
 import { AuthManager } from './auth.js';
 import { store } from './store.js';
-import { openModal, closeModal, getJournalModalHTML, getConfirmModalHTML, showToast } from '../ui/ui-controller.js';
+import { openModal, closeModal, openJournalModal, closeJournalModal, getJournalModalHTML, getJournalTableRowsHTML, getConfirmModalHTML, showToast } from '../ui/ui-controller.js';
 
 /* JournalManager: Handles the logic for the user's personal logbook, managing both public anchors and drafts. */
 export class JournalManager {
@@ -9,6 +9,12 @@ export class JournalManager {
         this.nostr = nostrService;
         this.entries = [];
         this.isSyncing = false;
+        this.filters = {
+            date: '',
+            name: '',
+            category: 'all',
+            status: 'all'
+        };
     }
 
     /* Synchronizes logbook entries from the network and renders them on the map. */
@@ -101,24 +107,139 @@ export class JournalManager {
             return;
         }
 
-        /* 1. Initial render with local data. */
-        openModal(getJournalModalHTML(this.entries));
+        /* 1. Initial render with current data and filters. */
+        this.renderJournal();
 
         /* 2. Background synchronization. */
         await this.syncJournal();
 
-        /* 3. Re-render only if modal is still open and data has updated. */
-        const modalContent = document.getElementById('modal-content');
-        if (modalContent) {
-            modalContent.innerHTML = getJournalModalHTML(this.entries);
+        /* 3. Re-render only if modal is still open. */
+        this.renderJournal();
+    }
+
+    /**
+     * Filters entries and renders the journal modal.
+     */
+    renderJournal() {
+        // Prepare rows logic below...
+
+        const filtered = this.entries.filter(ev => {
+            // 1. Date Filter (matches YYYY-MM-DD)
+            const entryDate = new Date(ev.created_at * 1000).toISOString().split('T')[0];
+            const matchesDate = !this.filters.date || entryDate === this.filters.date;
+
+            // 2. Name Filter (Lugar)
+            const title = (ev.tags.find(t => t[0] === 'title')?.[1] || ev.content || '').toLowerCase();
+            const matchesName = !this.filters.name || title.includes(this.filters.name.toLowerCase());
+
+            // 3. Category Filter
+            const entryCat = ev.tags.find(t => t[0] === 't' && t[1] !== 'spatial_anchor')?.[1] || 'all';
+            const matchesCategory = this.filters.category === 'all' || entryCat === this.filters.category;
+
+            // 4. Status Filter
+            const entryStatus = String(ev.kind);
+            const matchesStatus = this.filters.status === 'all' || entryStatus === this.filters.status;
+
+            return matchesDate && matchesName && matchesCategory && matchesStatus;
+        });
+
+        const entriesBody = document.getElementById('journal-entries-body');
+
+        if (entriesBody) {
+            // Partial Update: Only the rows
+            entriesBody.innerHTML = getJournalTableRowsHTML(filtered);
+        } else {
+            // Full Update: First time or if closed
+            const html = getJournalModalHTML(filtered);
+            openJournalModal(html);
             this.setupJournalEvents();
+        }
+
+        // Update Date Label (always do this as it's outside entriesBody)
+        const dateLabel = document.getElementById('journal-filter-date-label');
+        if (dateLabel) {
+            dateLabel.innerText = this.filters.date ? this.filters.date : 'Todas';
+            dateLabel.classList.toggle('text-indigo-600', !!this.filters.date);
+        }
+
+        // Only restore filter values if they are out of sync (avoids cursor jumps)
+        const nameInput = document.getElementById('journal-filter-name');
+        if (nameInput && nameInput.value !== this.filters.name) {
+            nameInput.value = this.filters.name;
+        }
+
+        const catSelect = document.getElementById('journal-filter-category');
+        if (catSelect && catSelect.value !== this.filters.category) {
+            catSelect.value = this.filters.category;
+        }
+
+        const statusSelect = document.getElementById('journal-filter-status');
+        if (statusSelect && statusSelect.value !== this.filters.status) {
+            statusSelect.value = this.filters.status;
         }
     }
 
     /* Sets up the event listeners for the journal modal UI. */
     setupJournalEvents() {
         const closeBtn = document.getElementById('btn-close-journal');
-        if (closeBtn) closeBtn.onclick = () => closeModal();
+        if (closeBtn) closeBtn.onclick = () => closeJournalModal();
+
+        // Custom Calendar Trigger
+        const dateTrigger = document.getElementById('journal-filter-date-trigger');
+        if (dateTrigger) {
+            dateTrigger.onclick = () => {
+                // Collect unique dates where entries exist for indicators
+                const entryDates = [...new Set(this.entries.map(ev =>
+                    new Date(ev.created_at * 1000).toISOString().split('T')[0]
+                ))];
+
+                showCustomCalendar(dateTrigger, this.filters.date, entryDates, (newDate) => {
+                    this.filters.date = newDate;
+                    this.renderJournal();
+                });
+            };
+        }
+
+        // Name Filter
+        const nameInput = document.getElementById('journal-filter-name');
+        if (nameInput) {
+            nameInput.oninput = (e) => {
+                this.filters.name = e.target.value;
+                this.renderJournal();
+            };
+        }
+
+        // Category Filter
+        const catSelect = document.getElementById('journal-filter-category');
+        if (catSelect) {
+            catSelect.onchange = (e) => {
+                this.filters.category = e.target.value;
+                this.renderJournal();
+            };
+        }
+
+        // Status Filter
+        const statusSelect = document.getElementById('journal-filter-status');
+        if (statusSelect) {
+            statusSelect.onchange = (e) => {
+                this.filters.status = e.target.value;
+                this.renderJournal();
+            };
+        }
+
+        // Clear Filters
+        const clearBtn = document.getElementById('journal-clear-filters');
+        if (clearBtn) {
+            clearBtn.onclick = () => {
+                this.filters = {
+                    date: '',
+                    name: '',
+                    category: 'all',
+                    status: 'all'
+                };
+                this.renderJournal();
+            };
+        }
     }
 
     /* Deletes an entry (Kind 5 or local) and removes its visual representation from the map. */
@@ -162,7 +283,7 @@ export class JournalManager {
             }
         };
 
-        openModal(getConfirmModalHTML(
+        openJournalModal(getConfirmModalHTML(
             isLocal ? "¿Quieres borrar este borrador local? Se perderá permanentemente." : "¿Quieres eliminar esta ancla? Esto enviará una solicitud Kind 5 a los relays.",
             performDelete
         ));
