@@ -1,12 +1,15 @@
 import * as nip19 from 'nostr-tools/nip19'
 import * as nip05 from 'nostr-tools/nip05'
+import { generateSecretKey, getPublicKey } from 'nostr-tools/pure'
+import { hexToBytes, bytesToHex } from '@noble/hashes/utils'
 
 export const AuthManager = {
     /* Load stored pubkey and profile cache from localStorage on startup. */
     userPubkey: localStorage.getItem('nostr_user_pubkey') || null,
     profileCache: JSON.parse(localStorage.getItem('nostr_profiles')) || {},
-    loginMethod: localStorage.getItem('nostr_login_method') || 'extension', // 'extension', 'read-only', or 'connect'
+    loginMethod: localStorage.getItem('nostr_login_method') || 'extension', // 'extension', 'read-only', 'connect', or 'local'
     connectData: JSON.parse(localStorage.getItem('nostr_connect_data')) || null, // { signerPubkey, clientSecretKey }
+    localSecretKey: localStorage.getItem('nostr_local_sk') || null,
 
     /**
      * Extension Login (NIP-07)
@@ -69,6 +72,56 @@ export const AuthManager = {
     },
 
     /**
+     * Login with Secret Key (nsec1... or hex)
+     */
+    async loginSecret(input) {
+        let skBytes;
+        try {
+            if (input.startsWith('nsec1')) {
+                const { type, data } = nip19.decode(input);
+                if (type !== 'nsec') throw new Error("nsec inválido");
+                skBytes = data;
+            } else if (/^[0-9a-fA-F]{64}$/.test(input)) {
+                skBytes = hexToBytes(input);
+            } else {
+                throw new Error("Formato de clave privada no reconocido");
+            }
+
+            const pubkey = getPublicKey(skBytes);
+            this.userPubkey = pubkey;
+            this.loginMethod = 'local';
+            this.localSecretKey = bytesToHex(skBytes);
+
+            localStorage.setItem('nostr_user_pubkey', pubkey);
+            localStorage.setItem('nostr_login_method', 'local');
+            localStorage.setItem('nostr_local_sk', this.localSecretKey);
+
+            return this.userPubkey;
+        } catch (error) {
+            console.error("Secret login error:", error);
+            throw error;
+        }
+    },
+
+    /**
+     * Generate new Nostr Identity
+     */
+    async generate() {
+        const sk = generateSecretKey();
+        const pk = getPublicKey(sk);
+
+        this.userPubkey = pk;
+        this.loginMethod = 'local';
+        this.localSecretKey = bytesToHex(sk);
+
+        localStorage.setItem('nostr_user_pubkey', pk);
+        localStorage.setItem('nostr_login_method', 'local');
+        localStorage.setItem('nostr_local_sk', this.localSecretKey);
+
+        return pk;
+    },
+
+    /**
      * Nostr Connect Login (NIP-46)
      */
     async loginConnect(signerPubkey, clientSecretKeyHex) {
@@ -88,9 +141,11 @@ export const AuthManager = {
         this.userPubkey = null;
         this.loginMethod = null;
         this.connectData = null;
+        this.localSecretKey = null;
         localStorage.removeItem('nostr_user_pubkey');
         localStorage.removeItem('nostr_login_method');
         localStorage.removeItem('nostr_connect_data');
+        localStorage.removeItem('nostr_local_sk');
         location.reload();
     },
 
@@ -117,6 +172,7 @@ export const AuthManager = {
         if (!this.isLoggedIn()) return false;
         if (this.loginMethod === 'extension' && !!window.nostr) return true;
         if (this.loginMethod === 'connect' && this.connectData) return true;
+        if (this.loginMethod === 'local' && this.localSecretKey) return true;
         return false;
     }
 };

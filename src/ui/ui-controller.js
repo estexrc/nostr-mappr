@@ -77,49 +77,162 @@ function getProfileModalHTML(profile = null) {
             </div>
         `;
     } else {
+        // Redirigir al nuevo Portal de Autentificación
         return `
-            <div class="p-10 flex flex-col items-center text-center gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div class="p-10 flex flex-col items-center text-center gap-6 animate-fade-slide">
                 <button class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl transition-colors" onclick="closeModal()">✕</button>
                 <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-2 shadow-inner">
-                    <i class="fas fa-user-secret text-4xl text-indigo-600"></i>
+                    <span class="material-symbols-rounded text-indigo-600 text-[48px]">account_circle</span>
                 </div>
                 <div>
-                    <h2 class="text-2xl font-black text-slate-900 leading-tight">Conectar Identidad</h2>
-                    <p class="mt-2 text-slate-500 text-sm leading-relaxed max-w-[240px]">Para anclar lugares o guardar favoritos, conecta tu cuenta de Nostr.</p>
+                    <h2 class="text-2xl font-black text-slate-900 leading-tight">Acceso Mappr</h2>
+                    <p class="mt-2 text-slate-500 text-sm leading-relaxed max-w-[240px]">Conecta tu identidad Nostr para empezar a mapear el mundo.</p>
                 </div>
                 
-                <div class="w-full flex flex-col gap-4">
-                    <button id="btn-modal-login" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-xl group">
-                        <i class="fas fa-key text-indigo-400 group-hover:rotate-12 transition-transform"></i> USAR EXTENSIÓN (ALBY/NOS2X)
-                    </button>
-                    
-                    <button id="btn-show-manual" class="text-[11px] font-black text-slate-400 hover:text-indigo-500 transition-colors uppercase tracking-widest">
-                        O CONECTAR MANUALMENTE (npub/email)
-                    </button>
-
-                    <div id="manual-login-section" class="hidden flex flex-col gap-2 animate-in slide-in-from-top-2 duration-300">
-                        <div class="h-[1px] bg-slate-100 w-full my-1"></div>
-                        
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">LECTURA (npub/NIP-05)</label>
-                        <input type="text" id="manual-pubkey-input" placeholder="npub... o usuario@dominio" 
-                               class="w-full p-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm">
-                        <button id="btn-manual-login" class="w-full py-3 bg-slate-200 text-slate-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-300">
-                            ENTRAR MODO LECTURA
-                        </button>
-
-                        <div class="h-[1px] bg-slate-100 w-full my-2"></div>
-
-                        <label class="text-[9px] font-black text-indigo-400 uppercase tracking-widest ml-1">FIRMA REMOTA (Bunker URL)</label>
-                        <input type="text" id="bunker-url-input" placeholder="bunker://pubkey?relay=..." 
-                               class="w-full p-3 bg-indigo-50/50 border border-indigo-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm">
-                        <button id="btn-connect-login" class="w-full py-3 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 shadow-lg shadow-indigo-100">
-                            CONECTAR SIGNER
-                        </button>
-                    </div>
-                </div>
+                <button onclick="window.openAuthModal('nip07')" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-xl">
+                     CONFIGURAR ACCESO
+                </button>
             </div>
         `;
     }
+}
+
+/**
+ * Generates the HTML for the new Auth Portal tabs.
+ */
+export function getAuthPortalHTML(activeTab = 'generar') {
+    const tabs = [
+        { id: 'generar', label: 'Generar' },
+        { id: 'email', label: 'Email' },
+        { id: 'importar', label: 'Importar' },
+        { id: 'nip07', label: 'NIP-07' }
+    ];
+
+    const navHTML = tabs.map(tab => `
+        <button class="auth-tab-btn ${activeTab === tab.id ? 'active' : ''}" data-tab="${tab.id}">
+            ${tab.label}
+            <div class="auth-indicator"></div>
+        </button>
+    `).join('');
+
+    let contentHTML = '';
+
+    switch (activeTab) {
+        case 'generar':
+            contentHTML = `
+                <div class="tab-content-fade flex flex-col h-full">
+                    <div class="auth-info-box">
+                        <h4 class="text-sm font-bold text-slate-900 mb-1">Autenticación con Nostr</h4>
+                        <p class="text-[12px] text-slate-500 leading-relaxed">Se generará automáticamente un par de claves (keypair) Nostr único para ti.</p>
+                    </div>
+                    <ul class="space-y-4 mb-auto pt-6">
+                        <li class="flex items-start gap-4">
+                            <span class="w-2.5 h-2.5 rounded-full bg-yellow-400 mt-1 shrink-0"></span>
+                            <div>
+                                <p class="text-[13px] font-bold text-slate-800">Generación automática</p>
+                                <p class="text-[12px] text-slate-500">Se crea un par de claves nuevo y único</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-4">
+                            <span class="w-2.5 h-2.5 rounded-full bg-yellow-400 mt-1 shrink-0"></span>
+                            <div>
+                                <p class="text-[13px] font-bold text-slate-800">Almacenamiento seguro</p>
+                                <p class="text-[12px] text-slate-500">La identidad se guarda localmente en tu navegador</p>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="mt-auto">
+                        <button id="btn-auth-generate" class="btn-auth-primary">Generar identidad y continuar</button>
+                        <p class="mt-6 text-[10px] text-slate-400 text-center leading-relaxed">
+                            Al continuar, aceptas que se almacene tu identidad Nostr en este navegador.
+                        </p>
+                    </div>
+                </div>
+            `;
+            break;
+        case 'email':
+            contentHTML = `
+                <div class="tab-content-fade flex flex-col h-full">
+                    <div class="auth-info-box">
+                        <h4 class="text-sm font-bold text-slate-900 mb-1">Email y contraseña</h4>
+                        <p class="text-[12px] text-slate-500 leading-relaxed">Si vinculaste tu Nostr a un email, puedes iniciar sesión aquí.</p>
+                    </div>
+                    <div class="space-y-4 mb-auto pt-4">
+                        <div class="auth-input-group">
+                            <label class="auth-input-label">Email</label>
+                            <input type="email" id="auth-email" placeholder="tu@email.com" class="input-glass input-auth-glass w-full">
+                        </div>
+                        <div class="auth-input-group">
+                            <label class="auth-input-label">Contraseña</label>
+                            <input type="password" id="auth-password" placeholder="Mínimo 8 caracteres" class="input-glass input-auth-glass w-full">
+                        </div>
+                    </div>
+                    <div class="mt-auto">
+                        <button id="btn-auth-email" class="btn-auth-primary" disabled>Iniciar sesión</button>
+                        <p class="mt-4 text-[11px] text-slate-400 text-center">¿Olvidaste tu contraseña? Usa tu código de recuperación.</p>
+                    </div>
+                </div>
+            `;
+            break;
+        case 'importar':
+            contentHTML = `
+                <div class="tab-content-fade flex flex-col h-full">
+                    <div class="auth-info-box">
+                        <h4 class="text-sm font-bold text-slate-900 mb-1">Importar clave privada</h4>
+                        <p class="text-[12px] text-slate-500 leading-relaxed">Ingresa tu clave privada (nsec). No se comparte con nadie.</p>
+                    </div>
+                    <div class="auth-input-group mb-auto pt-8">
+                        <label class="auth-input-label">Clave privada (nsec)</label>
+                        <input type="password" id="auth-nsec" placeholder="nsec1..." class="input-glass input-auth-glass w-full">
+                    </div>
+                    <div class="mt-auto">
+                        <button id="btn-auth-import" class="btn-auth-primary" disabled>Importar clave</button>
+                        <p class="mt-6 text-[11px] text-slate-400 text-center leading-relaxed">
+                            Tu clave privada nunca se comparte y se guarda localmente.
+                        </p>
+                    </div>
+                </div>
+            `;
+            break;
+        case 'nip07':
+            contentHTML = `
+                <div class="tab-content-fade flex flex-col h-full">
+                    <div class="auth-info-box">
+                        <h4 class="text-sm font-bold text-slate-900 mb-1">Wallet / Extensión</h4>
+                        <p class="text-[12px] text-slate-500 leading-relaxed">Conecta usando una extensión NIP-07 como Alby, nos2x, etc.</p>
+                    </div>
+                    
+                    <div class="bg-slate-50/50 p-8 rounded-[24px] mb-auto mt-4 text-center border border-slate-100/50">
+                        <p class="text-[12px] text-slate-500 leading-relaxed mb-0">
+                            Tu extensión de navegador firmará las operaciones de forma segura sin exponer tu clave privada a esta aplicación.
+                        </p>
+                    </div>
+
+                    <div class="mt-auto">
+                        <button id="btn-auth-nip07" class="btn-auth-primary flex items-center justify-center gap-2">
+                            <span class="material-symbols-rounded text-[20px]">account_balance_wallet</span>
+                            Conectar wallet
+                        </button>
+                        <p class="mt-6 text-[11px] text-slate-400 text-center font-medium">Requiere extensión NIP-07 instalada.</p>
+                    </div>
+                </div>
+            `;
+            break;
+    }
+
+    return `
+        <div class="auth-overlay" id="auth-portal-overlay">
+            <div class="glass auth-modal p-10 flex flex-col relative" id="auth-portal-modal">
+                <div class="auth-tabs-nav">
+                    ${navHTML}
+                </div>
+
+                <div id="auth-tab-content" class="flex-1 flex flex-col min-h-0">
+                    ${contentHTML}
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 /**
@@ -200,6 +313,123 @@ export function closeModal() {
     modalContent.innerHTML = '';
     modalContent.style.cssText = '';
 }
+
+/**
+ * High-fidelity Authentication Portal Manager
+ */
+export function openAuthModal(initialTab = 'generar') {
+    closeModal(); // Close legacy modal if open
+
+    const renderPortal = (tab) => {
+        const portalHTML = getAuthPortalHTML(tab);
+        let overlay = document.getElementById('auth-portal-overlay');
+
+        if (!overlay) {
+            document.body.insertAdjacentHTML('beforeend', portalHTML);
+            overlay = document.getElementById('auth-portal-overlay');
+
+            // Setup Click-Outside once
+            overlay.onclick = (e) => {
+                if (e.target === overlay) {
+                    window.closeAuthPortal();
+                }
+            };
+        } else {
+            // Update only content to prevent flicker
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = portalHTML;
+
+            // Update Navigation
+            const newNav = tempDiv.querySelector('.auth-tabs-nav');
+            overlay.querySelector('.auth-tabs-nav').innerHTML = newNav.innerHTML;
+
+            // Update Content
+            const newContent = tempDiv.querySelector('#auth-tab-content');
+            overlay.querySelector('#auth-tab-content').innerHTML = newContent.innerHTML;
+        }
+
+        // Setup Tab Events
+        overlay.querySelectorAll('.auth-tab-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                renderPortal(btn.dataset.tab);
+            };
+        });
+
+        // Setup Action Events & Validations
+        const btnNip07 = document.getElementById('btn-auth-nip07');
+        if (btnNip07) {
+            btnNip07.onclick = async () => {
+                try {
+                    await AuthManager.login();
+                    showToast("Sesión iniciada correctamente", "success");
+                    window.closeAuthPortal();
+                    location.reload();
+                } catch (e) {
+                    showToast(e.message, "error");
+                }
+            };
+        }
+
+        const btnImport = document.getElementById('btn-auth-import');
+        const inputNsec = document.getElementById('auth-nsec');
+        if (btnImport && inputNsec) {
+            inputNsec.oninput = () => {
+                btnImport.disabled = inputNsec.value.trim().length < 10;
+            };
+            btnImport.onclick = async () => {
+                try {
+                    await AuthManager.loginSecret(inputNsec.value.trim());
+                    showToast("Cuenta importada correctamente", "success");
+                    window.closeAuthPortal();
+                    location.reload();
+                } catch (e) {
+                    showToast(e.message, "error");
+                }
+            };
+        }
+
+        const btnEmail = document.getElementById('btn-auth-email');
+        const inputEmail = document.getElementById('auth-email');
+        const inputPass = document.getElementById('auth-password');
+        if (btnEmail && inputEmail && inputPass) {
+            const validateEmail = () => {
+                btnEmail.disabled = !inputEmail.value.includes('@') || inputPass.value.length < 8;
+            };
+            inputEmail.oninput = validateEmail;
+            inputPass.oninput = validateEmail;
+            btnEmail.onclick = () => {
+                showToast("Login vía email pronto disponible", "info");
+            };
+        }
+
+        const btnGenerate = document.getElementById('btn-auth-generate');
+        if (btnGenerate) {
+            btnGenerate.onclick = async () => {
+                try {
+                    btnGenerate.disabled = true;
+                    btnGenerate.innerHTML = 'Generando identidad...';
+                    await AuthManager.generate();
+                    showToast("¡Nueva identidad generada!", "success");
+                    window.closeAuthPortal();
+                    location.reload();
+                } catch (e) {
+                    showToast(e.message, "error");
+                    btnGenerate.disabled = false;
+                    btnGenerate.innerHTML = 'Generar identidad y continuar';
+                }
+            };
+        }
+    };
+
+    renderPortal(initialTab);
+}
+
+window.openAuthModal = openAuthModal;
+window.closeAuthPortal = () => {
+    const overlay = document.getElementById('auth-portal-overlay');
+    if (overlay) overlay.remove();
+};
 
 /** Opens the dedicated wide Journal overlay (no CSS class conflicts) */
 export function openJournalModal(html) {
@@ -367,76 +597,13 @@ export function initUI(nostrInstance) {
             if (AuthManager.isLoggedIn()) {
                 profile = AuthManager.profileCache[AuthManager.userPubkey];
                 if (!profile) profile = await nostrInstance.getUserProfile(AuthManager.userPubkey);
+                openModal(getProfileModalHTML(profile), 'modal-md');
+            } else {
+                openAuthModal('generar');
+                return;
             }
 
-            openModal(getProfileModalHTML(profile), 'modal-md');
-
-            // Extension Login
-            document.getElementById('btn-modal-login')?.addEventListener('click', async () => {
-                try {
-                    await AuthManager.login();
-                    location.reload();
-                } catch (err) {
-                    showToast(err.message, "error");
-                }
-            });
-
-            // Toggle Manual Login Section
-            document.getElementById('btn-show-manual')?.addEventListener('click', () => {
-                const section = document.getElementById('manual-login-section');
-                const btn = document.getElementById('btn-show-manual');
-                if (section) {
-                    section.classList.toggle('hidden');
-                    btn.classList.add('hidden'); // Hide the toggle button when section is shown
-                }
-            });
-
-            // Manual Login
-            document.getElementById('btn-manual-login')?.addEventListener('click', async () => {
-                const input = document.getElementById('manual-pubkey-input');
-                const val = input ? input.value.trim() : "";
-                if (!val) return showToast("Por favor ingresa una identidad", "info");
-
-                const btn = document.getElementById('btn-manual-login');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> CONECTANDO...';
-                btn.disabled = true;
-
-                try {
-                    await AuthManager.loginManual(val);
-                    location.reload();
-                } catch (err) {
-                    showToast(err.message, "error");
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                }
-            });
-
-            // Nostr Connect Login
-            document.getElementById('btn-connect-login')?.addEventListener('click', async () => {
-                const input = document.getElementById('bunker-url-input');
-                const val = input ? input.value.trim() : "";
-                if (!val) return showToast("Ingresa una URL de Bunker", "info");
-
-                const btn = document.getElementById('btn-connect-login');
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> CONECTANDO...';
-                btn.disabled = true;
-
-                try {
-                    const signerPubkey = await nostrInstance.connect.connect(val);
-                    const clientSecretHex = bytesToHex(nostrInstance.connect.clientSecretKey);
-
-                    await AuthManager.loginConnect(signerPubkey, clientSecretHex);
-                    showToast("¡Vínculo establecido!", "success");
-
-                    setTimeout(() => location.reload(), 1000);
-                } catch (err) {
-                    showToast("Error al conectar: " + err.message, "error");
-                    btn.innerHTML = 'CONECTAR SIGNER';
-                    btn.disabled = false;
-                }
-            });
-
+            // The following logic only applies to Profile Modal (Logged in)
             document.getElementById('btn-modal-logout')?.addEventListener('click', () => {
                 AuthManager.logout();
                 location.reload();
