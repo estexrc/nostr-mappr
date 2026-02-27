@@ -108,7 +108,7 @@ export const AuthManager = {
      */
     async generate() {
         const sk = generateSecretKey();
-        const pk = getPublicKey(sk);
+        const pk = getPublicKey(sk); // already returns hex from nostr-tools
         const nsec = nip19.nsecEncode(sk);
 
         this.userPubkey = pk;

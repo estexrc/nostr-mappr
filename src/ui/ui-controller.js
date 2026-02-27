@@ -1,5 +1,6 @@
 import { AuthManager } from '../core/auth.js';
 import { CATEGORIAS } from '../core/categories.js';
+import { openSettingsModal } from './settings-modal.js';
 
 /* --- FLOATING UI ELEMENTS --- */
 const userNameMini = document.getElementById('user-name-mini');
@@ -40,17 +41,17 @@ function getProfileModalHTML(profile = null) {
                     <div class="flex flex-col items-center gap-2 mt-1">
                         <span class="bg-indigo-50/50 px-3 py-1 rounded-full text-[10px] font-mono text-indigo-600 font-bold border border-indigo-100/50 tracking-wider">${npubShort}</span>
                         ${isReadOnly ? `
-                            <span class="bg-amber-50 text-amber-600 text-[9px] font-black px-2 py-0.5 rounded-full border border-amber-100 uppercase tracking-widest">
-                                👁️ Modo Solo Lectura
+                            <span class="bg-amber-50 text-amber-600 text-[9px] font-black px-2 py-0.5 rounded-full border border-amber-100 tracking-widest">
+                                👁️ Modo solo lectura
                             </span>
                         ` : ''}
                     </div>
                 </div>
 
                 <div class="grid grid-cols-3 gap-1 w-full bg-slate-50/30 p-4 rounded-[28px] border border-slate-100/50 glass shadow-sm">
-                    <div class="flex flex-col"><strong class="text-lg font-black text-slate-900">24K</strong><span class="text-[9px] font-bold text-slate-400 uppercase">⚡ SATS</span></div>
-                    <div class="flex flex-col border-x border-slate-200/50"><strong class="text-lg font-black text-slate-900">${profile.following || 0}</strong><span class="text-[9px] font-bold text-slate-400 uppercase">FOLLOWING</span></div>
-                    <div class="flex flex-col"><strong class="text-lg font-black text-slate-900">${profile.followers || 0}</strong><span class="text-[9px] font-bold text-slate-400 uppercase">FOLLOWERS</span></div>
+                    <div class="flex flex-col"><strong class="text-lg font-black text-slate-900">24K</strong><span class="text-[9px] font-bold text-slate-400">⚡ Sats</span></div>
+                    <div class="flex flex-col border-x border-slate-200/50"><strong class="text-lg font-black text-slate-900">${profile.following || 0}</strong><span class="text-[9px] font-bold text-slate-400">Siguiendo</span></div>
+                    <div class="flex flex-col"><strong class="text-lg font-black text-slate-900">${profile.followers || 0}</strong><span class="text-[9px] font-bold text-slate-400">Seguidores</span></div>
                 </div>
 
                 <div class="w-full text-left">
@@ -64,15 +65,15 @@ function getProfileModalHTML(profile = null) {
                             Conecta una extensión o usa Nostr Connect para poder publicar anclas.
                         </div>
                     ` : `
-                        <button class="w-full flex items-center justify-center gap-2 py-3.5 border border-slate-200/50 rounded-2xl font-bold text-slate-700 hover:bg-white/50 transition-all glass">
+                        <button id="btn-open-settings" class="w-full flex items-center justify-center gap-2 py-3.5 border border-slate-200/50 rounded-2xl font-bold text-slate-700 hover:bg-white/50 transition-all glass">
                             <span class="material-symbols-rounded text-indigo-500 text-[20px]">settings</span>
-                            Ajustes de Perfil
+                            Ajustes de perfil
                         </button>
                     `}
                 </div>
 
-                <button id="btn-modal-logout" class="w-full py-4 bg-rose-50/50 text-rose-500 rounded-2xl font-black hover:bg-rose-100/50 transition-all uppercase tracking-widest text-xs glass border border-rose-100/30">
-                    CERRAR SESIÓN
+                <button id="btn-modal-logout" class="w-full py-4 bg-rose-50/50 text-rose-500 rounded-2xl font-black hover:bg-rose-100/50 transition-all tracking-widest text-xs glass border border-rose-100/30">
+                    Cerrar sesión
                 </button>
             </div>
         `;
@@ -90,7 +91,7 @@ function getProfileModalHTML(profile = null) {
                 </div>
                 
                 <button onclick="window.openAuthModal('nip07')" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-xl">
-                     CONFIGURAR ACCESO
+                     Configurar acceso
                 </button>
             </div>
         `;
@@ -244,21 +245,21 @@ export function getDraftModalHTML(lat, lng) {
         <div class="p-8 flex flex-col gap-6 animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto">
             <button class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl transition-colors" id="btn-close-draft">✕</button>
             <div class="text-center">
-                <h2 class="text-2xl font-black text-slate-900">Ancla Provisional</h2>
-                <span class="inline-block mt-2 bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-mono font-bold border border-indigo-100 uppercase tracking-widest">
+                <h2 class="text-2xl font-black text-slate-900">Ancla provisional</h2>
+                <span class="inline-block mt-2 bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-mono font-bold border border-indigo-100 tracking-wider">
                     📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}
                 </span>
             </div>
 
             <div class="space-y-4">
                 <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">TÍTULO DEL LUGAR</label>
+                    <label class="text-[10px] font-black text-indigo-600 tracking-widest ml-1">Título del lugar</label>
                     <input type="text" id="draft-title" placeholder="Ej: Café de la Esquina..." 
                            class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 placeholder:text-slate-400">
                 </div>
 
                 <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">CATEGORÍA</label>
+                    <label class="text-[10px] font-black text-indigo-600 tracking-widest ml-1">Categoría</label>
                     <select id="draft-category" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800">
                         <option value="">Seleccionar categoría...</option>
                         ${options}
@@ -269,14 +270,14 @@ export function getDraftModalHTML(lat, lng) {
                     <input type="file" id="draft-photo" accept="image/*" multiple class="hidden">
                     <div class="flex flex-col items-center gap-2">
                         <i class="fas fa-camera text-2xl text-indigo-500 group-hover:scale-110 transition-transform"></i>
-                        <p class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">SUBIR O TOMAR FOTO</p>
+                        <p class="text-[10px] font-black text-indigo-600 tracking-widest">Subir o tomar foto</p>
                     </div>
                 </div>
                 <div id="draft-preview-container" class="flex gap-2 flex-wrap empty:hidden"></div>
             </div>
 
-            <button id="btn-save-draft" class="w-full py-4 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest text-xs">
-                GUARDAR EN DIARIO
+            <button id="btn-save-draft" class="w-full py-4 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all tracking-widest text-xs">
+                Guardar en diario
             </button>
         </div>
     `;
@@ -545,7 +546,7 @@ const ANCHOR_STATES = {
  */
 export function getJournalTableRowsHTML(entries = []) {
     if (entries.length === 0) {
-        return '<tr><td colspan="5" class="py-24 text-center font-bold text-slate-300 uppercase tracking-widest text-sm">No hay registros aún</td></tr>';
+        return '<tr><td colspan="5" class="py-24 text-center font-bold text-slate-300 tracking-widest text-sm">No hay registros aún</td></tr>';
     }
 
     return entries.map(ev => {
@@ -565,20 +566,20 @@ export function getJournalTableRowsHTML(entries = []) {
 
         return `
             <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                <td class="py-4 text-[11px] font-bold text-slate-400 uppercase tracking-tighter text-center">${date}</td>
+                <td class="py-4 text-[11px] font-bold text-slate-400 tracking-tighter text-center">${date}</td>
                 <td class="py-4 max-w-[200px] font-black text-slate-800 text-sm truncate text-center">${title}</td>
                 <td class="py-4 text-center">
-                    <span class="font-bold text-indigo-500 text-[10px] uppercase tracking-wider">${categoryText}</span>
+                    <span class="font-bold text-indigo-500 text-[10px] tracking-wider">${categoryText}</span>
                 </td>
                 <td class="py-4 text-center">
-                    <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase text-white ${config.color}">${config.label}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[8px] font-black text-white ${config.color}">${config.label}</span>
                 </td>
                 <td class="py-4 pr-6">
                     <div class="flex items-center justify-center gap-2">
                         <button class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 transition-all border border-indigo-100" 
-                                onclick="window.centerMapAndOpenPopup('${ev.id}', ${lat}, ${lng}); window.closeJournalModal()" title="View on Map">📍</button>
-                        ${(ev.kind === 30024 || ev.kind === 'local') ? `<button class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center hover:bg-purple-100 transition-all border border-purple-100" onclick="window.completeAnchor('${ev.id}')" title="Publish">🚀</button>` : ''}
-                        <button class="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-rose-50 hover:text-rose-600 transition-all border border-slate-100" onclick="window.deleteEntry('${ev.id}')" title="Delete">🗑️</button>
+                                onclick="window.centerMapAndOpenPopup('${ev.id}', ${lat}, ${lng}); window.closeJournalModal()" title="Ver en mapa">📍</button>
+                        ${(ev.kind === 30024 || ev.kind === 'local') ? `<button class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center hover:bg-purple-100 transition-all border border-purple-100" onclick="window.completeAnchor('${ev.id}')" title="Publicar">🚀</button>` : ''}
+                        <button class="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-rose-50 hover:text-rose-600 transition-all border border-slate-100" onclick="window.deleteEntry('${ev.id}')" title="Borrar">🗑️</button>
                     </div>
                 </td>
             </tr>
@@ -609,7 +610,7 @@ export function getJournalModalHTML(entries = []) {
             <button class="absolute top-8 right-8 text-slate-400 hover:text-slate-600 text-2xl transition-colors" id="btn-close-journal">✕</button>
             
             <div class="flex flex-col items-center gap-2">
-                <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tighter">Diario de Anclas</h2>
+                <h2 class="text-3xl font-black text-slate-900 tracking-tighter">Diario de anclas</h2>
                 <div class="h-1.5 w-14 bg-indigo-500 rounded-full shadow-sm shadow-indigo-200"></div>
             </div>
 
@@ -617,7 +618,7 @@ export function getJournalModalHTML(entries = []) {
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
                 <!-- Date Filter -->
                 <div class="flex flex-col gap-2 relative">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pl-1">Fecha</label>
+                    <label class="text-[10px] font-black text-slate-400 tracking-[0.2em] pl-1">Fecha</label>
                     <div id="journal-filter-date-trigger" class="input-glass w-full cursor-pointer group">
                         <span id="journal-filter-date-label" class="text-slate-600 font-bold truncate">Todas</span>
                         <span class="material-symbols-rounded text-slate-400 ml-auto text-lg group-hover:text-indigo-500 transition-colors">calendar_month</span>
@@ -626,7 +627,7 @@ export function getJournalModalHTML(entries = []) {
 
                 <!-- Name Filter -->
                 <div class="flex flex-col gap-2">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pl-1">Nombre</label>
+                    <label class="text-[10px] font-black text-slate-400 tracking-[0.2em] pl-1">Nombre</label>
                     <input type="text" id="journal-filter-name" maxlength="25"
                         class="input-glass w-full text-xs" 
                         value="">
@@ -634,7 +635,7 @@ export function getJournalModalHTML(entries = []) {
 
                 <!-- Category Filter -->
                 <div class="flex flex-col gap-2">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pl-1">Categoría</label>
+                    <label class="text-[10px] font-black text-slate-400 tracking-[0.2em] pl-1">Categoría</label>
                     <select id="journal-filter-category" class="input-glass select-glass w-full cursor-pointer">
                         ${categoriesHTML}
                     </select>
@@ -642,7 +643,7 @@ export function getJournalModalHTML(entries = []) {
 
                 <!-- Status Filter -->
                 <div class="flex flex-col gap-2">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pl-1">Estado</label>
+                    <label class="text-[10px] font-black text-slate-400 tracking-[0.2em] pl-1">Estado</label>
                     <select id="journal-filter-status" class="input-glass select-glass w-full cursor-pointer">
                         ${statusOptions}
                     </select>
@@ -660,7 +661,7 @@ export function getJournalModalHTML(entries = []) {
                 <div class="flex-1 overflow-y-auto custom-scrollbar">
                     <table class="w-full border-collapse">
                         <thead class="sticky top-0 z-10">
-                            <tr class="bg-slate-50/90 backdrop-blur-md text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                            <tr class="bg-slate-50/90 backdrop-blur-md text-[10px] font-black text-slate-400 tracking-widest border-b border-slate-100">
                                 <th class="py-5 text-center px-6">Fecha</th>
                                 <th class="py-5 text-center px-6">Lugar</th>
                                 <th class="py-5 text-center px-6">Categoría</th>
@@ -693,21 +694,28 @@ export function initUI(nostrInstance) {
                         console.warn("Could not fetch profile, using default.");
                     }
                 }
-                
+
                 // If still null, pass empty object to trigger the Profile Panel instead of legacy login
                 openModal(getProfileModalHTML(profile || {}), 'modal-md');
             } else {
                 openAuthModal('generar');
                 return;
             }
-
-            // The following logic only applies to Profile Modal (Logged in)
-            document.getElementById('btn-modal-logout')?.addEventListener('click', () => {
-                AuthManager.logout();
-                location.reload();
-            });
         });
     }
+
+    // Modal Event Delegation for better reliability
+    modalContent.addEventListener('click', (e) => {
+        if (e.target.closest('#btn-modal-logout')) {
+            AuthManager.logout();
+            location.reload();
+        }
+
+        if (e.target.closest('#btn-open-settings')) {
+            closeModal();
+            openSettingsModal('perfil', nostrInstance);
+        }
+    });
 
     document.getElementById('btn-open-journal')?.addEventListener('click', async () => {
         if (!AuthManager.isLoggedIn()) {
@@ -763,25 +771,25 @@ export function getPublishModalHTML(lat, lng) {
         <div class="p-8 flex flex-col gap-6 animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto w-full">
             <button id="btn-close-publish" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl transition-colors">×</button>
             <div class="text-center">
-                <h2 class="text-2xl font-black text-slate-900 uppercase">🚀 Publicar Ancla</h2>
-                <span class="inline-block mt-2 bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-mono font-bold border border-indigo-100 uppercase tracking-widest">
+                <h2 class="text-2xl font-black text-slate-900">🚀 Publicar ancla</h2>
+                <span class="inline-block mt-2 bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-mono font-bold border border-indigo-100 tracking-wider">
                     📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}
                 </span>
             </div>
             
             <div class="space-y-4">
                 <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">NOMBRE DEL LUGAR</label>
+                    <label class="text-[10px] font-black text-indigo-600 tracking-widest ml-1">Nombre del lugar</label>
                     <input type="text" id="pub-title" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800" placeholder="Ej: Café de la Esquina...">
                 </div>
 
                 <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">DESCRIPCIÓN / RESEÑA</label>
+                    <label class="text-[10px] font-black text-indigo-600 tracking-widest ml-1">Descripción / reseña</label>
                     <textarea id="pub-description" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 h-24 resize-none" placeholder="Cuenta por qué este lugar es especial..."></textarea>
                 </div>
 
                 <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">CATEGORÍA</label>
+                    <label class="text-[10px] font-black text-indigo-600 tracking-widest ml-1">Categoría</label>
                     <select id="pub-category" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800">
                         ${categoryOptions} 
                     </select>
@@ -791,14 +799,14 @@ export function getPublishModalHTML(lat, lng) {
                     <input type="file" id="pub-photo" multiple accept="image/*" class="hidden">
                     <div class="flex flex-col items-center gap-2">
                         <i class="fas fa-camera text-2xl text-indigo-500 group-hover:scale-110 transition-transform"></i>
-                        <p class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">SUBIR O TOMAR FOTO</p>
+                        <p class="text-[10px] font-black text-indigo-600 tracking-widest">Subir o tomar foto</p>
                     </div>
                 </div>
                 <div id="pub-preview-container" class="grid grid-cols-4 gap-2 empty:hidden"></div>
             </div>
 
-            <button id="btn-do-publish" class="w-full py-5 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest text-xs">
-                PUBLICAR EN NOSTR
+            <button id="btn-do-publish" class="w-full py-5 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all tracking-widest text-xs">
+                Publicar en Nostr
             </button>
         </div>
     `;
@@ -823,7 +831,7 @@ export function showToast(message, type = 'success', duration = 3000) {
     toast.className = `${colors[type] || colors.info} p-4 rounded-2xl shadow-2xl border flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500 pointer-events-auto cursor-pointer`;
 
     const icon = type === 'success' ? '🚀' : '⚠️';
-    toast.innerHTML = `<span class="text-xl">${icon}</span> <span class="font-black text-[12px] uppercase tracking-wider grow">${message}</span>`;
+    toast.innerHTML = `<span class="text-xl">${icon}</span> <span class="font-black text-[12px] tracking-wider grow">${message}</span>`;
 
     toast.onclick = () => {
         toast.classList.add('animate-out', 'fade-out', 'zoom-out', 'duration-300');
@@ -854,8 +862,8 @@ export function getDescriptionModalHTML(title, description) {
             <div class="text-[13px] text-slate-600 leading-relaxed max-h-[60vh] overflow-y-auto custom-scrollbar pr-3 font-medium">
                 ${description.replace(/\n/g, '<br>')}
             </div>
-            <button onclick="closeModal()" class="w-full py-4 bg-brand text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-indigo-500/20">
-                CERRAR
+            <button onclick="closeModal()" class="w-full py-4 bg-brand text-white rounded-2xl font-black tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-indigo-500/20">
+                Cerrar
             </button>
         </div>
         `;
@@ -878,11 +886,11 @@ export function getConfirmModalHTML(message, onConfirm) {
             </div>
             
             <div class="grid grid-cols-2 gap-3 w-full">
-                <button onclick="window.closeModal(); window.closeJournalModal();" class="py-4 bg-slate-100 text-slate-500 rounded-2xl font-black hover:bg-slate-200 transition-all uppercase tracking-widest text-[10px]">
-                    CANCELAR
+                <button onclick="window.closeModal(); window.closeJournalModal();" class="py-4 bg-slate-100 text-slate-500 rounded-2xl font-black hover:bg-slate-200 transition-all tracking-widest text-[10px]">
+                    Cancelar
                 </button>
-                <button onclick="window.executeConfirmAction()" class="py-4 bg-rose-600 text-white rounded-2xl font-black hover:bg-rose-700 shadow-lg shadow-rose-200 transition-all uppercase tracking-widest text-[10px]">
-                    ELIMINAR
+                <button onclick="window.executeConfirmAction()" class="py-4 bg-rose-600 text-white rounded-2xl font-black hover:bg-rose-700 shadow-lg shadow-rose-200 transition-all tracking-widest text-[10px]">
+                    Eliminar
                 </button>
             </div>
         </div>
@@ -944,7 +952,7 @@ export function showCustomCalendar(trigger, currentVal, activeDates = [], onSele
             <div class="flex flex-col gap-4">
                 <div class="flex items-center justify-between px-1">
                     <div class="flex flex-col">
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${year}</span>
+                        <span class="text-[10px] font-black text-slate-400 tracking-widest">${year}</span>
                         <span class="text-sm font-black text-slate-800 capitalize">${monthName}</span>
                     </div>
                     <div class="flex gap-1">
@@ -952,15 +960,15 @@ export function showCustomCalendar(trigger, currentVal, activeDates = [], onSele
                         <button class="calendar-header-btn" id="cal-next"><span class="material-symbols-rounded text-lg">chevron_right</span></button>
                     </div>
                 </div>
-                <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 uppercase pb-1">
+                <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 pb-1">
                     <div>Do</div><div>Lu</div><div>Ma</div><div>Mi</div><div>Ju</div><div>Vi</div><div>Sá</div>
                 </div>
                 <div class="grid grid-cols-7 gap-1">
                     ${daysHTML.join('')}
                 </div>
                 <div class="flex justify-between items-center pt-2 border-t border-slate-100/50 mt-1">
-                    <button id="cal-clear" class="text-[10px] font-black text-indigo-500 hover:text-indigo-700 uppercase tracking-wider px-2 py-1">Limpiar</button>
-                    <button id="cal-today" class="text-[10px] font-black text-slate-400 hover:text-slate-600 uppercase tracking-wider px-2 py-1">Hoy</button>
+                    <button id="cal-clear" class="text-[10px] font-black text-indigo-500 hover:text-indigo-700 tracking-wider px-2 py-1">Limpiar</button>
+                    <button id="cal-today" class="text-[10px] font-black text-slate-400 hover:text-slate-600 tracking-wider px-2 py-1">Hoy</button>
                 </div>
             </div>
         `;

@@ -199,7 +199,7 @@ export class MapManager {
 
         const catInfo = CATEGORIAS.find(c => c.id === pin.categoryId) || CATEGORIAS.find(c => c.id === 'nostr');
 
-        const btnBase = "w-full py-2.5 px-3 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all active:scale-95 text-center shadow-sm flex items-center justify-center gap-1.5";
+        const btnBase = "w-full py-2.5 px-3 rounded-xl font-bold text-[10px] tracking-wider transition-all active:scale-95 text-center shadow-sm flex items-center justify-center gap-1.5";
         const followBtn = `${btnBase} bg-brand text-white hover:bg-brand-dark shadow-indigo-500/10`;
         const zapBtn = `${btnBase} bg-amber-400 text-amber-950 hover:bg-amber-500 shadow-amber-500/10`;
         const deleteBtn = `${btnBase} bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-100`;
@@ -248,7 +248,7 @@ export class MapManager {
                 <div class="space-y-3">
                     <div class="flex flex-col gap-1.5">
                         <h3 class="text-[14px] font-heading text-slate-800 leading-tight">${pin.title}</h3>
-                        ${catInfo ? `<span class="bg-indigo-50 text-brand text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-indigo-100 self-start ${catInfo.group.includes('Nostr') ? 'neon-pulse-nostr' : ''}">${catInfo.label}</span>` : ''}
+                        ${catInfo ? `<span class="bg-indigo-50 text-brand text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-full border border-indigo-100 self-start ${catInfo.group.includes('Nostr') ? 'neon-pulse-nostr' : ''}">${catInfo.label}</span>` : ''}
                     </div>
                     ${imageHTML}
                     ${!pin.isDraft ? `
@@ -303,7 +303,7 @@ export class MapManager {
 
         const catInfo = CATEGORIAS.find(c => c.id === categoryId) || CATEGORIAS.find(c => c.id === 'nostr');
 
-        const btnClass = "flex-1 py-2 px-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 text-center shadow-sm";
+        const btnClass = "flex-1 py-2 px-3 rounded-xl font-black text-[10px] tracking-widest transition-all active:scale-95 text-center shadow-sm";
         const followBtn = `${btnClass} bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200`;
         const zapBtn = `${btnClass} bg-amber-400 text-black hover:bg-amber-500 shadow-amber-200`;
         const deleteBtn = `${btnClass} bg-rose-500 text-white hover:bg-rose-600 shadow-rose-200`;
@@ -334,7 +334,7 @@ export class MapManager {
                 <div class="mb-4">
                     <div class="flex flex-col gap-1 mb-2">
                         <strong class="text-sm font-black text-slate-800">${title}</strong>
-                        ${catInfo ? `<span class="bg-indigo-50 text-indigo-600 text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-indigo-100 self-start">${catInfo.label}</span>` : ''}
+                        ${catInfo ? `<span class="bg-indigo-50 text-indigo-600 text-[8px] font-black px-2 py-0.5 rounded-full border border-indigo-100 self-start">${catInfo.label}</span>` : ''}
                     </div>
                     ${imageHTML}
                     ${!isDraft ? `

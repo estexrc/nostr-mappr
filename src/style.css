@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+/* Material Symbols only — SF Pro comes from the OS, no Google Font import needed */
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 
 @import "tailwindcss";
 
@@ -9,8 +10,9 @@
     --color-indigo-500: #6366f1;
     --color-indigo-600: #4f46e5;
 
-    /* Typography */
-    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    /* Typography — Apple System Font Stack */
+    --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
 
     /* Light Glass Surface tokens */
     --glass-bg: rgba(255, 255, 255, 0.7);
@@ -59,11 +61,19 @@
 
 body {
     background: #f1f5f9;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     overflow: hidden;
     /* No scroll en el body principal */
     position: relative;
+}
+
+/* Force SF Pro on all form elements (browsers don't inherit font from body by default) */
+button,
+input,
+select,
+textarea {
+    font-family: var(--font-sans);
 }
 
 /* Ocultar barras de desplazamiento globales */
@@ -104,17 +114,45 @@ body::before {
     border-color: rgba(99, 102, 241, 0.5) !important;
 }
 
-/* Typography Overrides */
+/* ============================================================
+   APPLE TYPOGRAPHY SYSTEM — per Design System Reference
+   ============================================================ */
+
+/* Impact Titles: H1 modals, section headers */
 .font-heading {
-    font-weight: 900 !important;
-    letter-spacing: -0.02em !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.01em !important;
+    font-family: var(--font-sans) !important;
 }
 
+/* Small Labels: form field labels, filter chips */
 .font-label {
-    text-transform: uppercase !important;
     font-size: 11px !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.06em !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em !important;
+    font-family: var(--font-sans) !important;
+}
+
+/* ─── BRUTE-FORCE UNIVERSAL FONT OVERRIDE ───
+   Forces SF Pro everywhere EXCEPT icon fonts and crypto key fields */
+*:not(.font-mono-key):not(.material-symbols-rounded):not(.material-symbols-outlined) {
+    font-family: var(--font-sans) !important;
+}
+
+/* Preserve Material Symbols icon font explicitly */
+.material-symbols-rounded,
+.material-symbols-outlined {
+    font-family: 'Material Symbols Rounded' !important;
+}
+
+/* Cryptographic Key Fields: npub, nsec, hex — SF Mono only */
+.font-mono-key,
+.font-mono-key * {
+    font-family: var(--font-mono) !important;
+    font-size: 10px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.01em !important;
+    opacity: 0.8;
 }
 
 /* UX Feedback elements */
@@ -312,10 +350,9 @@ body::before {
 }
 
 .font-label {
-    text-transform: uppercase;
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.02em;
 }
 
 .btn-hover-effect {
@@ -733,5 +770,94 @@ body::before {
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
     .auth-modal {
         margin-bottom: calc(env(safe-area-inset-bottom) + 20px);
+    }
+}
+
+/* --- PROFILE SETTINGS STYLES --- */
+.settings-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.3);
+    backdrop-filter: blur(48px);
+    -webkit-backdrop-filter: blur(48px);
+    z-index: 6000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: authFadeIn 0.4s ease-out;
+}
+
+.settings-modal {
+    width: 95vw;
+    height: 90vh;
+    max-width: 800px;
+    background: rgba(248, 250, 252, 0.9) !important;
+    border-radius: 40px !important;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.2);
+    animation: authModalAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+}
+
+.settings-tabs-nav {
+    display: flex;
+    background: rgba(241, 245, 249, 0.5);
+    padding: 6px;
+    border-radius: 16px;
+    margin: 0 32px 24px 32px;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.settings-tabs-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.settings-tab-btn {
+    flex: 1;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #94a3b8;
+    border-radius: 12px;
+    white-space: nowrap;
+    transition: all 0.2s;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+}
+
+.settings-tab-btn.active {
+    background: rgba(99, 102, 241, 0.1);
+    color: #4f46e5;
+}
+
+/* Custom switch for 2FA with Mappr colors */
+.peer-checked\:bg-indigo-600:checked~div {
+    background-color: #6366f1 !important;
+}
+
+.peer-checked\:bg-indigo-600:checked~div::after {
+    background-color: #ffffff !important;
+}
+
+
+@media (max-width: 768px) {
+    .settings-modal {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0 !important;
+        max-height: 100vh;
+    }
+
+    .settings-tabs-nav {
+        padding-left: 32px;
+        padding-right: 32px;
     }
 }

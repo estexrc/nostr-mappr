@@ -147,20 +147,20 @@ document.getElementById('btn-quick-pop').onclick = async (e) => {
                 </div>
                 <div class="flex flex-col gap-2.5">
                     <button onclick="window.openReviewModal(${lat}, ${lng})" 
-                            class="w-full py-2.5 bg-brand text-white rounded-xl font-bold text-[11px] uppercase tracking-wider shadow-lg shadow-indigo-500/20 btn-hover-effect flex items-center justify-center gap-2">
+                            class="w-full py-2.5 bg-brand text-white rounded-xl font-bold text-[11px] tracking-wider shadow-lg shadow-indigo-500/20 btn-hover-effect flex items-center justify-center gap-2">
                         <span class="material-symbols-rounded text-[18px]">edit_note</span>
-                        <span>${isReadOnly ? 'BORRADOR LOCAL' : 'RESEÑA DIRECTA'}</span>
+                        <span>${isReadOnly ? 'Borrador local' : 'Reseña directa'}</span>
                     </button>
                     ${!isReadOnly ? `
                         <button onclick="window.openDraftModal(${lat}, ${lng})" 
-                                class="w-full py-2.5 glass text-slate-700 rounded-xl font-bold text-[11px] uppercase tracking-wider btn-hover-effect flex items-center justify-center gap-2">
+                                class="w-full py-2.5 glass text-slate-700 rounded-xl font-bold text-[11px] tracking-wider btn-hover-effect flex items-center justify-center gap-2">
                             <span class="material-symbols-rounded text-[18px]">save_as</span>
-                            <span>GUARDAR BORRADOR</span>
+                            <span>Guardar borrador</span>
                         </button>
                     ` : ''}
                 </div>
                 ${isReadOnly ? '<p class="text-[10px] text-amber-600 font-bold text-center bg-amber-50 py-1.5 rounded-lg border border-amber-100/50">👁️ Modo Solo Lectura</p>' : ''}
-                <button onclick="window.clearTemporalPin()" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 mt-1 text-center w-full">Cancelar</button>
+                <button onclick="window.clearTemporalPin()" class="text-[10px] font-bold text-slate-400 tracking-widest hover:text-slate-600 mt-1 text-center w-full">Cancelar</button>
             </div>
         `;
 
