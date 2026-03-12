@@ -19,6 +19,7 @@
     "@fortawesome/fontawesome-free": "^7.2.0",
     "leaflet": "^1.9.4",
     "ngeohash": "^0.6.3",
+    "nostr-login": "^1.7.0",
     "nostr-tools": "^2.20.0"
   },
   "description": "",

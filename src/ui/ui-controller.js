@@ -73,7 +73,10 @@ function getProfileModalHTML(profile = null) {
                 </div>
 
                 <button id="btn-modal-logout" class="w-full py-4 bg-rose-50/50 text-rose-500 rounded-2xl font-black hover:bg-rose-100/50 transition-all tracking-widest text-xs glass border border-rose-100/30">
-                    Cerrar sesión
+                    Cerrar sesión (Mantener Llave)
+                </button>
+                <button id="btn-modal-logout-hard" class="w-full text-[9px] font-bold text-slate-400 hover:text-rose-400 transition-colors mt-2">
+                    Hard Reset (Borrar todo)
                 </button>
             </div>
         `;
@@ -158,16 +161,16 @@ export function getAuthPortalHTML(activeTab = 'generar') {
                         <h4 class="text-sm font-bold text-slate-900 mb-1">Email y contraseña</h4>
                         <p class="text-[12px] text-slate-500 leading-relaxed">Si vinculaste tu Nostr a un email, puedes iniciar sesión aquí.</p>
                     </div>
-                    <div class="space-y-4 mb-auto pt-4">
+                    <form id="auth-email-form" onsubmit="return false;" class="space-y-4 mb-auto pt-4">
                         <div class="auth-input-group">
                             <label class="auth-input-label">Email</label>
-                            <input type="email" id="auth-email" placeholder="tu@email.com" class="input-glass input-auth-glass w-full">
+                            <input type="email" id="auth-email" autocomplete="username" placeholder="tu@email.com" class="input-glass input-auth-glass w-full">
                         </div>
                         <div class="auth-input-group">
                             <label class="auth-input-label">Contraseña</label>
-                            <input type="password" id="auth-password" placeholder="Mínimo 8 caracteres" class="input-glass input-auth-glass w-full">
+                            <input type="password" id="auth-password" autocomplete="current-password" placeholder="Mínimo 8 caracteres" class="input-glass input-auth-glass w-full">
                         </div>
-                    </div>
+                    </form>
                     <div class="mt-auto">
                         <button id="btn-auth-email" class="btn-auth-primary" disabled>Iniciar sesión</button>
                         <p class="mt-4 text-[11px] text-slate-400 text-center">¿Olvidaste tu contraseña? Usa tu código de recuperación.</p>
@@ -182,10 +185,10 @@ export function getAuthPortalHTML(activeTab = 'generar') {
                         <h4 class="text-sm font-bold text-slate-900 mb-1">Importar clave privada</h4>
                         <p class="text-[12px] text-slate-500 leading-relaxed">Ingresa tu clave privada (nsec). No se comparte con nadie.</p>
                     </div>
-                    <div class="auth-input-group mb-auto pt-8">
+                    <form id="auth-import-form" onsubmit="return false;" class="auth-input-group mb-auto pt-8">
                         <label class="auth-input-label">Clave privada (nsec)</label>
-                        <input type="password" id="auth-nsec" placeholder="nsec1..." class="input-glass input-auth-glass w-full">
-                    </div>
+                        <input type="password" id="auth-nsec" autocomplete="current-password" placeholder="nsec1..." class="input-glass input-auth-glass w-full">
+                    </form>
                     <div class="mt-auto">
                         <button id="btn-auth-import" class="btn-auth-primary" disabled>Importar clave</button>
                         <p class="mt-6 text-[11px] text-slate-400 text-center leading-relaxed">
@@ -417,23 +420,95 @@ export function openAuthModal(initialTab = 'generar') {
                 btnEmail.innerHTML = `<span class="auth-spinner"></span> Iniciando sesión...`;
 
                 try {
-                    await AuthManager.loginEmail(inputEmail.value.trim(), inputPass.value.trim());
+                    // Logic for Bunker Pull (Login) via nostr-login SDK
+                    const email = inputEmail.value.trim();
+                    const password = inputPass.value.trim();
+
+                    // Import the SDK dynamically to avoid heavy initial bundle
+                    const { init, launch } = await import('nostr-login');
+                    init({
+                        theme: 'dark',
+                        noHeader: true
+                    });
+
+                    // Trigger the login flow
+                    const result = await AuthManager.loginEmail(email, password);
+
+                    // The SDK handles NIP-46 handshake. 
+                    // We need to wait for the result or use the launch flow
+                    const sessionPromise = launch(email, {
+                        password,
+                        // We strictly want Bunker Pull
+                        forceBunker: true,
+                        noHeader: true,
+                        img: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
+                        devOverrideBunkerOrigin: 'wss://relay.nsec.app'
+                    });
+
+                    // Wrap in timeout like in settings
+                    const session = await Promise.race([
+                        sessionPromise,
+                        new Promise((_, reject) => setTimeout(() => reject(new Error("Time-out: El búnker no respondió. Reintenta en unos segundos.")), 120000))
+                    ]);
+
+                    if (!session || !session.pubkey) {
+                        throw new Error("Error de comunicación con el Búnker de Identidad");
+                    }
+
+                    // Success: SDK usually handles storage, but we sync our AuthManager
+                    AuthManager.userPubkey = session.pubkey;
+                    AuthManager.loginMethod = 'connect';
+
+                    // Re-hydration: If bunker provides secret key (some do if authorized)
+                    if (session.privkey) {
+                        AuthManager.localSecretKey = session.privkey;
+                        localStorage.setItem('nostr_local_sk', session.privkey);
+                    }
+
+                    localStorage.setItem('nostr_user_pubkey', session.pubkey);
+                    localStorage.setItem('nostr_login_method', 'connect');
+
+                    // iOS Safari persistence: Save bunker_ptr in cookie with strict flags
+                    if (session.bunkerPtr) {
+                        const expiry = new Date();
+                        expiry.setFullYear(expiry.getFullYear() + 1);
+                        document.cookie = `bunker_ptr=${session.bunkerPtr}; expires=${expiry.toUTCString()}; path=/; Secure; SameSite=Lax`;
+                    }
+
+                    // Auto-Hydrate Metadata & Immediate UI Sync (FORCED COMPLETION)
+                    let profileForSync = null;
+                    try {
+                        // Display "Hydrating" state in toast or inner UI if needed
+                        profileForSync = await nostrInstance.getUserProfile(session.pubkey);
+                        if (profileForSync) {
+                            AuthManager.saveProfile(session.pubkey, profileForSync);
+                            updateFloatingUser(profileForSync);
+                        } else {
+                            updateFloatingUser({ name: 'Usuario Conectado' });
+                        }
+                    } catch (pErr) {
+                        console.warn("Auto-hydrate failed:", pErr);
+                        updateFloatingUser({ name: 'Usuario Conectado' });
+                    }
+
                     showToast("Sesión iniciada correctamente", "success");
 
-                    // Success Moment: Smooth Exit
-                    window.closeAuthPortal();
-
-                    // Reload to initialize Nostr Service with new session
-                    setTimeout(() => location.reload(), 500);
+                    // Crucial: Wait a bit before closing to allow user to see success
+                    setTimeout(() => {
+                        window.closeAuthPortal();
+                        setTimeout(() => location.reload(), 1000);
+                    }, 800);
                 } catch (err) {
                     btnEmail.disabled = false;
                     btnEmail.classList.remove('loading');
                     btnEmail.innerHTML = originalContent;
 
-                    // Inject Semantic Error
+                    // Capture exceptions and show friendly visual alert
                     const errorEl = document.createElement('div');
                     errorEl.className = 'auth-error-msg';
-                    errorEl.innerText = err.message || "Error al conectar con el servidor de llaves";
+                    errorEl.innerText = (err.message && (err.message.includes('CORS') || err.message.includes('fetch')))
+                        ? "No se pudo conectar con el servidor de llaves (Error de Red/Búnker)"
+                        : (err.message || "Error al conectar con la identidad");
                     tabContent.appendChild(errorEl);
                 }
             };
@@ -707,8 +782,10 @@ export function initUI(nostrInstance) {
     // Modal Event Delegation for better reliability
     modalContent.addEventListener('click', (e) => {
         if (e.target.closest('#btn-modal-logout')) {
-            AuthManager.logout();
-            location.reload();
+            AuthManager.logout(false);
+        }
+        if (e.target.closest('#btn-modal-logout-hard')) {
+            AuthManager.logout(true);
         }
 
         if (e.target.closest('#btn-open-settings')) {
@@ -817,7 +894,7 @@ export function showToast(message, type = 'success', duration = 3000) {
     if (!container) {
         container = document.createElement('div');
         container.id = 'toast-container';
-        container.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 z-[3000] flex flex-col gap-2 pointer-events-none w-full px-5 max-w-sm';
+        container.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 z-[10000] flex flex-col gap-2 pointer-events-none w-full px-5 max-w-sm';
         document.body.appendChild(container);
     }
 

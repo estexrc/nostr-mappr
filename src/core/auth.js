@@ -1,5 +1,4 @@
 import * as nip19 from 'nostr-tools/nip19'
-import * as nip05 from 'nostr-tools/nip05'
 import { generateSecretKey, getPublicKey } from 'nostr-tools/pure'
 import { hexToBytes, bytesToHex } from '@noble/hashes/utils'
 
@@ -35,27 +34,31 @@ export const AuthManager = {
     },
 
     /**
-     * Manual Login (npub, hex, or NIP-05)
+     * Signs an event using the available NIP-07 extension.
+     */
+    async signEvent(event) {
+        if (window.nostr) {
+            return await window.nostr.signEvent(event);
+        }
+        throw new Error("No hay extensión disponible para firmar.");
+    },
+
+    /**
+     * Manual Login (npub, hex, or NIP-05 - NIP-05 removed)
      */
     async loginManual(input) {
         let pubkey = input.trim();
 
         try {
-            // 1. Check if NIP-05 (user@domain.com)
-            if (pubkey.includes('@')) {
-                const profile = await nip05.queryProfile(pubkey);
-                if (!profile || !profile.pubkey) throw new Error("No se pudo resolver la dirección NIP-05");
-                pubkey = profile.pubkey;
-            }
-            // 2. Check if npub
-            else if (pubkey.startsWith('npub1')) {
+            // 1. Check if npub
+            if (pubkey.startsWith('npub1')) {
                 const { type, data } = nip19.decode(pubkey);
                 if (type !== 'npub') throw new Error("Npub inválido");
                 pubkey = data;
             }
-            // 3. Check if 64-char hex
+            // 2. Check if 64-char hex
             else if (!/^[0-9a-fA-F]{64}$/.test(pubkey)) {
-                throw new Error("Formato de llave pública no reconocido");
+                throw new Error("Formato de llave pública no reconocido (prohibido NIP-05)");
             }
 
             this.userPubkey = pubkey;
@@ -124,71 +127,60 @@ export const AuthManager = {
 
     /**
      * Email Login leveraging NIP-46 (Nostr Connect)
-     * Resolves email as NIP-05 and initiates a session.
+     * STRICT NIP-46 flow (Bunker Pull).
+     * NIP-05 lookup is EXPLICITLY PROHIBITED.
      */
     async loginEmail(email, password) {
-        try {
-            // 1. Resolve NIP-05
-            const profile = await nip05.queryProfile(email);
-            if (!profile || !profile.pubkey) {
-                throw new Error("No se encontró una cuenta de Nostr vinculada a este email.");
-            }
-
-            // 2. Generate ephemeral client key for this session
-            const clientSk = generateSecretKey();
-            const clientSkHex = bytesToHex(clientSk);
-
-            // 3. Initiate NIP-46 session state
-            // Note: The actual connection is established by NostrService/NostrConnectService
-            this.userPubkey = profile.pubkey;
-            this.loginMethod = 'connect';
-            this.connectData = {
-                signerPubkey: profile.pubkey,
-                clientSecretKey: clientSkHex,
-                relays: profile.relays || ['wss://relay.nsec.app', 'wss://bunker.strfry.chat']
-            };
-
-            // 4. Persist for iOS Safari stability
-            localStorage.setItem('nostr_user_pubkey', this.userPubkey);
-            localStorage.setItem('nostr_login_method', 'connect');
-            localStorage.setItem('nostr_connect_data', JSON.stringify(this.connectData));
-
-            return {
-                pubkey: this.userPubkey,
-                bunkerUrl: `bunker://${this.userPubkey}?relay=${this.connectData.relays[0]}`
-            };
-        } catch (error) {
-            console.error("Email login error:", error);
-            throw error;
-        }
+        // We do NOT purge local identity here, only the active session
+        this.userPubkey = null;
+        this.loginMethod = 'connect';
+        return { email };
     },
 
     /**
-     * Nostr Connect Login (NIP-46) - Legacy/Manual
+     * Selective reset of session state.
+     * @param {boolean} hard - If true, clears EVERYTHING including local identity.
      */
-    async loginConnect(signerPubkey, clientSecretKeyHex) {
-        this.userPubkey = signerPubkey;
-        this.loginMethod = 'connect';
-        this.connectData = { signerPubkey, clientSecretKey: clientSecretKeyHex };
-
-        localStorage.setItem('nostr_user_pubkey', signerPubkey);
-        localStorage.setItem('nostr_login_method', 'connect');
-        localStorage.setItem('nostr_connect_data', JSON.stringify(this.connectData));
-
-        return this.userPubkey;
-    },
-
-    /* Clears session data and reloads the application. */
-    logout() {
+    purgeSession(hard = false) {
+        // Always clear active session state
         this.userPubkey = null;
         this.loginMethod = null;
         this.connectData = null;
-        this.localSecretKey = null;
+
         localStorage.removeItem('nostr_user_pubkey');
         localStorage.removeItem('nostr_login_method');
         localStorage.removeItem('nostr_connect_data');
-        localStorage.removeItem('nostr_local_sk');
+
+        if (hard) {
+            this.localSecretKey = null;
+            localStorage.clear();
+            sessionStorage.clear();
+            // Clear Cookies
+            document.cookie.split(";").forEach((c) => {
+                document.cookie = c
+                    .replace(/^ +/, "")
+                    .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
+            console.log("♻️ Hard-reset: Everything purged.");
+        } else {
+            console.log("♻️ Session logout: Identity preserved.");
+        }
+    },
+
+    /* Clears session but keeps identity unless hard logout is invoked. */
+    logout(hard = false) {
+        this.purgeSession(hard);
         location.reload();
+    },
+
+    /**
+     * Specialized cleanup for bunker sessions to prevent corrupt half-states.
+     */
+    clearBunkerSession() {
+        localStorage.removeItem('nostr_connect_data');
+        this.connectData = null;
+        // Specifically clear the bunker_ptr cookie
+        document.cookie = "bunker_ptr=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     },
 
     /* Stores profile metadata in the local cache. */
@@ -199,6 +191,7 @@ export const AuthManager = {
 
     /* Retrieves a display name from cache or returns a shortened pubkey. */
     getDisplayName(pubkey) {
+        if (!pubkey) return "Invitado";
         return this.profileCache[pubkey]?.name ||
             this.profileCache[pubkey]?.display_name ||
             pubkey.substring(0, 8);
@@ -211,9 +204,9 @@ export const AuthManager = {
 
     /* Returns true if the user can sign events */
     canSign() {
+        if (window.nostr) return true; // Extension is always an option if present
         if (!this.isLoggedIn()) return false;
-        if (this.loginMethod === 'extension' && !!window.nostr) return true;
-        if (this.loginMethod === 'connect' && this.connectData) return true;
+        if (this.loginMethod === 'connect') return true; // Managed by SDK/Bunker
         if (this.loginMethod === 'local' && this.localSecretKey) return true;
         return false;
     }
